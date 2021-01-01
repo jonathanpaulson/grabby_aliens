@@ -15,6 +15,7 @@ uniform_real_distribution<ld> DIST(0.0, 1.0);
 ld r01() {
   return DIST(RNG);
 }
+// https://apps.dtic.mil/dtic/tr/fulltext/u2/a066739.pdf
 struct SortedRNG {
   SortedRNG(ll N) : I(N), CurMax(1.0) {}
   ld next() {
