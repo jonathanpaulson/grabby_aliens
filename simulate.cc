@@ -43,17 +43,17 @@ ostream& operator<<(ostream& o, const Civ& C) {
 
 // Between every pair of points i,j is a Euclidean distance of di,j = ((xi-xj)2 + (yi-yj)2 + (zi-zj)2)1/2.
 // Use “hypertorus” distance metric, that identifies opposite sides of box [0,1]d. (Can calc via, instead of dx = xi-xj, use (let a = abs(xi-xj), if a < ½, use a, else use 1-a).
-ld distance2(const vector<ld>& A, const vector<ld>& B) {
+ld distance2(const vector<ld>& A, const vector<ld>& B, ld L) {
   ld d2 = 0.0;
   for(ll i=0; i<A.size(); i++) {
     ld dx = abs(A[i]-B[i]);
-    dx = min(dx, 1.0-dx);
+    dx = min(dx, L-dx);
     d2 += dx*dx;
   }
   return d2;
 }
-ld distance(const vector<ld>& A, const vector<ld>& B) {
-  return sqrt(distance2(A,B));
+ld distance(const vector<ld>& A, const vector<ld>& B, ld L) {
+  return sqrt(distance2(A,B,L));
 }
 ld sq(ld x) { return x*x; }
 
@@ -81,7 +81,7 @@ void simulate(ll D, ld speed, ld n, ll N, ld c, ld L) {
       // i.T*speed - j.T*speed > dij
       // dij < speed*(i.T*j.T)
       // dij^2 < (speed*(i.T*j.T))^2
-      ld d2 = distance2(alive.V, cand.V);
+      ld d2 = distance2(alive.V, cand.V,L);
       bool dead = d2 < sq(speed*(cand.T-alive.T));
       if(dead) {
         is_alive = false;
@@ -107,7 +107,7 @@ void simulate(ll D, ld speed, ld n, ll N, ld c, ld L) {
     for(ll j=0; j<ALIVE.size(); j++) {
       auto c2 = ALIVE[j];
       if(i!=j) {
-        ld dij = distance(c1.V, c2.V);
+        ld dij = distance(c1.V, c2.V,L);
         ld wij = (dij/speed - (c1.T-c2.T))/2.0;
         ld oij = c2.T + dij/c;
         ld bij = speed*(c1.T-oij)/dij;
@@ -128,7 +128,7 @@ int main(int, char** argv) {
   ll D = stoll(argv[1]);
   ld n = atof(argv[2]);
   ll N = stoll(argv[3]);
-  ld speed = 1.0/atof(argv[4]);
+  ld speed = atof(argv[4]);
   ld c = stoll(argv[5]);
   ld L = atof(argv[6]);
   cerr << "D=" << D << " n=" << n << " N=" << N << " speed=" << speed << " c=" << c << " L=" << L << endl;

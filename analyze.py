@@ -11,15 +11,15 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--D', type=int)
 parser.add_argument('--n', type=float)
 parser.add_argument('--N', type=int)
-parser.add_argument('--s', type=float)
 parser.add_argument('--c', type=float, default=1.0)
 parser.add_argument('--L', type=float, default=1.0)
+parser.add_argument('--s', type=float, default=1.0)
 
 args = parser.parse_args()
 D,n,N,s,c,L = args.D,args.n,args.N,1.0/args.s,args.c,args.L
 
 fname = f'D={D}_n={n}_N={N:.2e}_s={s}'
-subprocess.check_output(f'g++ -std=c++17 -O3 -Wall -Werror -Wextra -Wshadow -Wno-sign-compare simulate.cc && ./a.out {D} {n} {N} {1.0/s} {c} {L} > {fname}.csv', shell=True)
+subprocess.check_output(f'g++ -std=c++17 -O3 -Wall -Werror -Wextra -Wshadow -Wno-sign-compare simulate.cc && ./a.out {D} {n} {N} {s} {c} {L} > {fname}.csv', shell=True)
 
 XYTW = []
 XT = []
