@@ -19,10 +19,10 @@ ld r01() {
 struct Civ {
   Civ(ll D) : V(D, 0.0), T(0.0) {}
 
-  static Civ mk_random(ll D, ld power) {
+  static Civ mk_random(ll D, ld power, ld L) {
     Civ ret(D);
     for(ll j=0; j<D; j++) {
-      ret.V[j] = r01();
+      ret.V[j] = r01()*L;
     }
     ret.T = pow(r01(), 1.0/(1.0+power));
     return ret;
@@ -57,11 +57,11 @@ ld distance(const vector<ld>& A, const vector<ld>& B) {
 }
 ld sq(ld x) { return x*x; }
 
-void simulate(ll D, ld speed, ld n, ll N) {
+void simulate(ll D, ld speed, ld n, ll N, ld c, ld L) {
   vector<Civ> C;
   C.reserve(N);
   for(ll i=0; i<N; i++) {
-    C.push_back(Civ::mk_random(D, n));
+    C.push_back(Civ::mk_random(D, n, L));
     if(i%1000000==0) {
       cerr << "GENERATE i=" << i << endl;
     }
@@ -109,7 +109,7 @@ void simulate(ll D, ld speed, ld n, ll N) {
       if(i!=j) {
         ld dij = distance(c1.V, c2.V);
         ld wij = (dij/speed - (c1.T-c2.T))/2.0;
-        ld oij = c2.T + dij;
+        ld oij = c2.T + dij/c;
         ld bij = speed*(c1.T-oij)/dij;
         if(c1.T > oij) {
           c1.nsee++;
@@ -129,6 +129,8 @@ int main(int, char** argv) {
   ld n = atof(argv[2]);
   ll N = stoll(argv[3]);
   ld speed = 1.0/atof(argv[4]);
-  cerr << "D=" << D << " n=" << n << " N=" << N << " speed=" << speed << endl;
-  simulate(D, speed, n, N);
+  ld c = stoll(argv[5]);
+  ld L = atof(argv[6]);
+  cerr << "D=" << D << " n=" << n << " N=" << N << " speed=" << speed << " c=" << c << " L=" << L << endl;
+  simulate(D, speed, n, N, c, L);
 }
