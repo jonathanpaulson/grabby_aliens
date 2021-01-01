@@ -8,23 +8,37 @@
 #include <unordered_set>
 using namespace std;
 using ll = int64_t;
-using ld = double;
+using ld = long double;
 
 std::minstd_rand RNG(std::random_device{}());
 uniform_real_distribution<ld> DIST(0.0, 1.0);
 ld r01() {
   return DIST(RNG);
 }
+struct SortedRNG {
+  SortedRNG(ll N) : I(N), CurMax(1.0) {}
+  ld next() {
+    ld ret = CurMax * pow(r01(), 1.0/I);
+    assert(ret < CurMax);
+    I--;
+    CurMax = ret;
+    return ret;
+  }
+  ll I;
+  ld CurMax;
+};
 
 struct Civ {
   Civ(ll D) : V(D, 0.0), T(0.0) {}
 
-  static Civ mk_random(ll D, ld power, ld L) {
+  static Civ mk_random(ll D, ld power, ld L, SortedRNG& R) {
     Civ ret(D);
     for(ll j=0; j<D; j++) {
       ret.V[j] = r01()*L;
     }
-    ret.T = pow(r01(), 1.0/(1.0+power));
+
+    ld t = 1.0 - R.next();
+    ret.T = pow(t, 1.0/(1.0+power));
     return ret;
   }
   vector<ld> V; // position in space
@@ -58,6 +72,7 @@ ld distance(const vector<ld>& A, const vector<ld>& B, ld L) {
 ld sq(ld x) { return x*x; }
 
 void simulate(ll D, ld speed, ld n, ll N, ld c, ld L) {
+  /*
   vector<Civ> C;
   C.reserve(N);
   for(ll i=0; i<N; i++) {
@@ -67,14 +82,18 @@ void simulate(ll D, ld speed, ld n, ll N, ld c, ld L) {
     }
   }
   sort(C.begin(), C.end(), [](Civ& A, Civ& B) { return A.T < B.T; });
+  */
 
+  SortedRNG R(N);
+  ll last_alive = 0;
   vector<Civ> ALIVE;
   for(ll i=0; i<N; i++) {
-    Civ cand = C[i];
+    Civ cand = Civ::mk_random(D, n, L, R);
     bool is_alive = true;
 
     for(ll j=0; j<ALIVE.size(); j++) {
       Civ& alive = ALIVE[j];
+      assert(cand.T > alive.T);
       // dead iff
       // i.T > j.T + dij/speed
       // i.T*speed > j.T*speed + dij
@@ -90,12 +109,15 @@ void simulate(ll D, ld speed, ld n, ll N, ld c, ld L) {
     }
     if(is_alive) {
       ALIVE.push_back(cand);
+      last_alive = i;
     }
-    if(i%1000000==0) {
+    if(i > last_alive + 1000000) { break; } // probably no more survivors
+    if(i%100000==0) {
       cerr << "i=" << i << " |C|=" << ALIVE.size() << endl;
     }
   }
   assert(ALIVE.size() > 0);
+  cerr << "last_alive=" << last_alive << endl;
 
   for(ll i=0; i<D; i++) {
     cout << static_cast<char>('X'+i) << ",";

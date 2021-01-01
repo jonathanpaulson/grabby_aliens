@@ -10,15 +10,17 @@ import math
 parser = argparse.ArgumentParser()
 parser.add_argument('--D', type=int)
 parser.add_argument('--n', type=float)
-parser.add_argument('--N', type=int)
+parser.add_argument('--N', type=str)
 parser.add_argument('--c', type=float, default=1.0)
 parser.add_argument('--L', type=float, default=1.0)
 parser.add_argument('--s', type=float, default=1.0)
 
 args = parser.parse_args()
-D,n,N,s,c,L = args.D,args.n,args.N,1.0/args.s,args.c,args.L
+D,n,N,s,c,L = args.D,args.n,int(float(args.N)),1.0/args.s,args.c,args.L
+if s != 1.0:
+    print('WARNING: s!=1.0 so graph titles are misleading')
 
-fname = f'D={D}_n={n}_N={N:.2e}_s={s}'
+fname = f'D={D}_n={n}_N={N:.2e}_L={L}_c={c}'
 subprocess.check_output(f'g++ -std=c++17 -O3 -Wall -Werror -Wextra -Wshadow -Wno-sign-compare simulate.cc && ./a.out {D} {n} {N} {s} {c} {L} > {fname}.csv', shell=True)
 
 XYTW = []
@@ -37,12 +39,13 @@ with open(f'{fname}.csv') as csvfile:
             XYTW.append((float(row['X']), float(row['Y']), float(row['OriginTime']), float(row['MinWait'])))
 
 T50 = np.median(T)
+print(T50,min(T),max(T),T[len(T)//2])
 TS = [x/T50 for x in T]
 WS = [x/T50 for x in W]
 AS = [x/T50 for x in A]
 
 fig, p = plt.subplots(3)
-fig.suptitle(f'D={D} n={n} N={N:.2e} s={s} |C|={len(TS)} |C|*s^D={len(TS)*s**D}')
+fig.suptitle(f'D={D} n={n} N={N:.2e} L={L} |C|={len(TS)} |C|/L^D={len(TS)/L**D}')
 
 p[0].plot(TS)
 p[0].set_ylabel('OriginTime')
@@ -76,7 +79,7 @@ if D == 1:
         meeting_points.append((x, t))
     GCs_and_meeting_points.append((XT[-1]))
 
-    plt.suptitle(f'D={D} n={n} N={N:.2e} s={s} |C|={len(TS)} |C|/s^D={len(TS)/s**D}')
+    plt.suptitle(f'D={D} n={n} N={N:.2e} L={L} |C|={len(TS)} |C|/L^D={len(TS)/L**D}')
     plt.figure(figsize=(6, 2.5))
     ax = plt.subplot(1, 1, 1)
 
