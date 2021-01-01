@@ -15,18 +15,18 @@ uniform_real_distribution<ld> DIST(0.0, 1.0);
 ld r01() {
   return DIST(RNG);
 }
+
 // https://apps.dtic.mil/dtic/tr/fulltext/u2/a066739.pdf
+// Samples from a sorted list of N U(0,1) variables
 struct SortedRNG {
-  SortedRNG(ll N) : I(N), CurMax(1.0) {}
+  SortedRNG(ll N) : I(N), LnCurMax(0.0) {}
   ld next() {
-    ld ret = CurMax * pow(r01(), 1.0/I);
-    assert(ret < CurMax);
+    LnCurMax += log(r01())/I;
     I--;
-    CurMax = ret;
-    return ret;
+    return exp(LnCurMax);
   }
   ll I;
-  ld CurMax;
+  ld LnCurMax = 0.0;
 };
 
 struct Civ {
@@ -112,8 +112,8 @@ void simulate(ll D, ld speed, ld n, ll N, ld c, ld L) {
       ALIVE.push_back(cand);
       last_alive = i;
     }
-    if(i > last_alive + 1000000) { break; } // probably no more survivors
-    if(i%100000==0) {
+    if(i > last_alive + 10000000) { break; } // probably no more survivors
+    if(i%10000==0) {
       cerr << "i=" << i << " |C|=" << ALIVE.size() << endl;
     }
   }
