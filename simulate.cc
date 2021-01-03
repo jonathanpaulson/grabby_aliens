@@ -10,7 +10,7 @@ using namespace std;
 using ll = int64_t;
 using ld = long double;
 
-std::minstd_rand RNG(std::random_device{}());
+std::minstd_rand RNG(0);
 uniform_real_distribution<ld> DIST(0.0, 1.0);
 ld r01() {
   return DIST(RNG);
@@ -133,7 +133,8 @@ void simulate(ll D, ld speed, ld n, ll N, ld c, ld L) {
         ld dij = distance(c1.V, c2.V,L);
         ld wij = (dij/speed - (c1.T-c2.T))/2.0;
         ld oij = c2.T + dij/c;
-        ld bij = speed*(c1.T-oij)/dij;
+        ld bij = 2*speed*(c1.T-oij)/dij;
+        assert(bij < 2.0);
         if(c1.T > oij) {
           c1.nsee++;
           c1.max_angle = max(c1.max_angle, bij);
