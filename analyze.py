@@ -21,7 +21,9 @@ if s != 1.0:
     print('WARNING: s!=1.0 so graph titles are misleading')
 
 fname = f'D={D}_n={n}_N={N:.2e}_L={L}_c={c}'
-subprocess.check_output(f'g++ -std=c++17 -O3 -Wall -Werror -Wextra -Wshadow -Wno-sign-compare simulate.cc && ./a.out {D} {n} {N} {s} {c} {L} > {fname}.csv', shell=True)
+subprocess.check_output(f'g++ -std=c++17 -O3 -Wall -Werror -Wextra -Wshadow -Wno-sign-compare simulate.cc && ./a.out {D} {n} {N} {s} {c} {L} {fname}', shell=True)
+
+print(f'{fname}.csv')
 
 XYTW = []
 XT = []
@@ -38,26 +40,41 @@ with open(f'{fname}.csv') as csvfile:
         if D>=2:
             XYTW.append((float(row['X']), float(row['Y']), float(row['OriginTime']), float(row['MinWait'])))
 
+YT = []
+YW = []
+with open(f'{fname}_years.txt') as yearfile:
+    reader = csv.DictReader(yearfile)
+    for row in reader:
+        YT.append(float(row['OriginTime']))
+        YW.append(float(row['MinWait']))
+
 T50 = np.median(T)
-print(T50,min(T),max(T),T[len(T)//2])
 TS = [x/T50 for x in T]
 WS = [x/T50 for x in W]
-AS = [x/T50 for x in A]
+print(max(W),max(W)/min(T)*13.8)
 
-fig, p = plt.subplots(3)
+fig, p = plt.subplots(3,2)
 fig.suptitle(f'D={D} n={n} N={N:.2e} L={L} |C|={len(TS)} |C|/L^D={len(TS)/L**D}')
 
-p[0].plot(TS)
-p[0].set_ylabel('OriginTime')
-p[0].set_xlabel('Index')
+p[0,0].plot(TS)
+p[0,0].set_ylabel('OriginTime')
+p[0,0].set_xlabel('Index')
 
-p[1].plot(sorted(WS))
-p[1].set_ylabel('MinWait')
-p[1].set_xlabel('Index')
+p[1,0].plot(sorted(WS))
+p[1,0].set_ylabel('MinWait')
+p[1,0].set_xlabel('Index')
 
-p[2].plot(sorted(AS))
-p[2].set_ylabel('MaxAngle')
-p[2].set_xlabel('Index')
+p[2,0].plot(sorted(A))
+p[2,0].set_ylabel('MaxAngle')
+p[2,0].set_xlabel('Index')
+
+p[0,1].plot(sorted(YT))
+p[0,1].set_ylabel('OriginTime (BYr)')
+p[0,1].set_xlabel('Index')
+
+p[1,1].plot(sorted(YW))
+p[1,1].set_ylabel('WaitTime (BYr)')
+p[1,1].set_xlabel('Index')
 
 plt.savefig(f'{fname}.png')
 subprocess.check_output(f'cmd.exe /C start {fname}.png', shell=True)

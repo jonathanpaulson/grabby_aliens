@@ -6,6 +6,10 @@
 #include <cassert>
 #include <functional>
 #include <unordered_set>
+#include <cfloat>
+#include <iomanip>
+#include <fstream>
+#include <queue>
 using namespace std;
 using ll = int64_t;
 using ld = long double;
@@ -23,7 +27,9 @@ struct SortedRNG {
   ld next() {
     LnCurMax += log(r01())/I;
     I--;
-    return exp(LnCurMax);
+    ld ans = exp(LnCurMax);
+    //cerr << setprecision(30) << LnCurMax << " " << ans << endl;
+    return ans;
   }
   ll I;
   ld LnCurMax = 0.0;
@@ -72,7 +78,78 @@ ld distance(const vector<ld>& A, const vector<ld>& B, ld L) {
 }
 ld sq(ld x) { return x*x; }
 
-void simulate(ll D, ld speed, ld n, ll N, ld c, ld L) {
+vector<ld> ratio_distribution(const vector<ld>& NUM, const vector<ld>& DEN) {
+  assert(NUM.size() > 0);
+  assert(DEN.size() > 0);
+  for(ll i=0; i+1<DEN.size(); i++) {
+    assert(DEN[i] < DEN[i+1]);
+  }
+  for(ll i=0; i+1<NUM.size(); i++) {
+    assert(NUM[i] < NUM[i+1]);
+  }
+
+  using Element = pair<ld,pair<ll,ll>>;
+
+  priority_queue<Element,vector<Element>,std::greater<Element>> Q;
+  for(ll i=0; i<DEN.size(); i++) {
+    ld value = 13.8/DEN[i] * NUM[0];
+    Q.push(make_pair(value, make_pair(i, static_cast<ll>(0))));
+  }
+  ll k = Q.size();
+  ll ai = 0;
+  vector<ld> ANS;
+  while(!Q.empty()) {
+    Element x = Q.top(); Q.pop();
+    ll di = x.second.first;
+    ll ni = x.second.second;
+    if(ai%k==0) {
+      //cerr << "DEBUG: " << x.first << " " << NUM[ni] << " " << DEN[di] << " di=" << di << " DEN.size=" << DEN.size() << endl;
+      ANS.push_back(x.first);
+    }
+    ai++;
+
+    if(ni+1 < NUM.size()) {
+      ld value = 13.8/DEN[di] * NUM[ni+1];
+      Q.push(make_pair(value, make_pair(di, ni+1)));
+    } else if(Q.empty() && ai%k!=0) { // always include the max
+      ANS.push_back(x.first);
+    }
+  }
+
+  assert(NUM.size()<=ANS.size() && ANS.size()<=NUM.size()+1);
+  for(ll i=0; i+1<ANS.size(); i++) {
+    assert(ANS[i]<ANS[i+1]);
+  }
+  return ANS;
+}
+
+vector<pair<ld,ld>> to_years(const vector<Civ>& C) {
+  for(ll i=0; i+1<C.size(); i++) {
+    assert(C[i].T < C[i+1].T);
+  }
+  vector<ld> N_ORIGIN;
+  vector<ld> N_WAIT;
+  vector<ld> DEN;
+  for(ll i=0; i<C.size(); i++) {
+    N_ORIGIN.push_back(C[i].T);
+    N_WAIT.push_back(C[i].min_wait);
+    if(C[i].nsee == 0) {
+      DEN.push_back(C[i].T);
+    }
+  }
+  
+  sort(N_WAIT.begin(), N_WAIT.end());
+  vector<ld> ORIGIN_YEARS = ratio_distribution(N_ORIGIN, DEN);
+  vector<ld> WAIT_YEARS = ratio_distribution(N_WAIT, DEN);
+  assert(ORIGIN_YEARS.size() == WAIT_YEARS.size());
+  vector<pair<ld,ld>> ANS;
+  for(ll i=0; i<ORIGIN_YEARS.size(); i++) {
+    ANS.push_back(make_pair(ORIGIN_YEARS[i], WAIT_YEARS[i]));
+  }
+  return ANS;
+}
+
+vector<Civ> simulate(ll D, ld speed, ld n, ll N, ld c, ld L) {
   /*
   vector<Civ> C;
   C.reserve(N);
@@ -112,7 +189,7 @@ void simulate(ll D, ld speed, ld n, ll N, ld c, ld L) {
       ALIVE.push_back(cand);
       last_alive = i;
     }
-    if(i > last_alive + 10000000) { break; } // probably no more survivors
+    if(i > last_alive + 1000000) { break; } // probably no more survivors
     if(i%10000==0) {
       cerr << "i=" << i << " |C|=" << ALIVE.size() << endl;
     }
@@ -120,13 +197,8 @@ void simulate(ll D, ld speed, ld n, ll N, ld c, ld L) {
   assert(ALIVE.size() > 0);
   cerr << "last_alive=" << last_alive << endl;
 
-  for(ll i=0; i<D; i++) {
-    cout << static_cast<char>('X'+i) << ",";
-  }
-  cout << "OriginTime,MinWait,NumberSeen,MaxAngle" << endl;
-
   for(ll i=0; i<ALIVE.size(); i++) {
-    auto c1 = ALIVE[i];
+    auto& c1 = ALIVE[i];
     for(ll j=0; j<ALIVE.size(); j++) {
       auto c2 = ALIVE[j];
       if(i!=j) {
@@ -144,8 +216,8 @@ void simulate(ll D, ld speed, ld n, ll N, ld c, ld L) {
     }
     // max angle = max{j that i can see in C} bi,j.
     assert(c1.min_wait < 1e6);
-    cout << c1 << endl;
   }
+  return ALIVE;
 }
 
 int main(int, char** argv) {
@@ -155,6 +227,26 @@ int main(int, char** argv) {
   ld speed = atof(argv[4]);
   ld c = stoll(argv[5]);
   ld L = atof(argv[6]);
+  string fname = argv[7];
+
   cerr << "D=" << D << " n=" << n << " N=" << N << " speed=" << speed << " c=" << c << " L=" << L << endl;
-  simulate(D, speed, n, N, c, L);
+
+  vector<Civ> CIVS = simulate(D, speed, n, N, c, L);
+  std::ofstream civ_out (fname+".csv", std::ofstream::out);
+  for(ll i=0; i<D; i++) {
+    civ_out << static_cast<char>('X'+i) << ",";
+  }
+  civ_out << "OriginTime,MinWait,NumberSeen,MaxAngle" << endl;
+  for(auto& civ : CIVS) {
+    civ_out << civ << endl;
+  }
+  civ_out.close();
+
+  vector<pair<ld,ld>> years = to_years(CIVS);
+  std::ofstream year_out (fname+"_years.txt", std::ofstream::out);
+  year_out << "OriginTime,MinWait" << endl;
+  for(auto& y : years) {
+    year_out << y.first << "," << y.second << endl;
+  }
+  year_out.close();
 }
