@@ -155,9 +155,6 @@ vector<Civ> simulate(ll D, ld speed, ld n, ll N, ld c, ld L) {
   C.reserve(N);
   for(ll i=0; i<N; i++) {
     C.push_back(Civ::mk_random(D, n, L));
-    if(i%1000000==0) {
-      cerr << "GENERATE i=" << i << endl;
-    }
   }
   sort(C.begin(), C.end(), [](Civ& A, Civ& B) { return A.T < B.T; });
   */
@@ -186,13 +183,11 @@ vector<Civ> simulate(ll D, ld speed, ld n, ll N, ld c, ld L) {
       }
     }
     if(is_alive) {
+      cerr << "i=" << i << " |C|=" << ALIVE.size() << endl;
       ALIVE.push_back(cand);
       last_alive = i;
     }
     if(i > last_alive + 1000000) { break; } // probably no more survivors
-    if(i%10000==0) {
-      cerr << "i=" << i << " |C|=" << ALIVE.size() << endl;
-    }
   }
   assert(ALIVE.size() > 0);
   cerr << "last_alive=" << last_alive << endl;
@@ -225,7 +220,7 @@ int main(int, char** argv) {
   ld n = atof(argv[2]);
   ll N = stoll(argv[3]);
   ld speed = atof(argv[4]);
-  ld c = stoll(argv[5]);
+  ld c = atof(argv[5]);
   ld L = atof(argv[6]);
   string fname = argv[7];
 

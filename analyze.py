@@ -16,7 +16,7 @@ parser.add_argument('--L', type=float, default=1.0)
 parser.add_argument('--s', type=float, default=1.0)
 
 args = parser.parse_args()
-D,n,N,s,c,L = args.D,args.n,int(float(args.N)),1.0/args.s,args.c,args.L
+D,n,N,s,c,L = args.D,args.n,int(float(args.N)),args.s,args.c,args.L
 if s != 1.0:
     print('WARNING: s!=1.0 so graph titles are misleading')
 
@@ -51,7 +51,6 @@ with open(f'{fname}_years.txt') as yearfile:
 T50 = np.median(T)
 TS = [x/T50 for x in T]
 WS = [x/T50 for x in W]
-print(max(W),max(W)/min(T)*13.8)
 
 fig, p = plt.subplots(3,2)
 fig.suptitle(f'D={D} n={n} N={N:.2e} L={L} |C|={len(TS)} |C|/L^D={len(TS)/L**D}')
