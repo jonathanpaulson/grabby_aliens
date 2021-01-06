@@ -223,6 +223,9 @@ int main(int, char** argv) {
   ld c = atof(argv[5]);
   ld L = atof(argv[6]);
   string fname = argv[7];
+  ll seed = stoll(argv[8]);
+
+  RNG.seed(seed);
 
   cerr << "D=" << D << " n=" << n << " N=" << N << " speed=" << speed << " c=" << c << " L=" << L << endl;
 

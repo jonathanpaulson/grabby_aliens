@@ -14,14 +14,15 @@ parser.add_argument('--N', type=str)
 parser.add_argument('--c', type=float, default=1.0)
 parser.add_argument('--L', type=float, default=1.0)
 parser.add_argument('--s', type=float, default=1.0)
+parser.add_argument('--seed', type=float, default=0)
 
 args = parser.parse_args()
-D,n,N,s,c,L = args.D,args.n,int(float(args.N)),args.s,args.c,args.L
+D,n,N,s,c,L,seed = args.D,args.n,int(float(args.N)),args.s,args.c,args.L,args.seed
 if s != 1.0:
     print('WARNING: s!=1.0 so graph titles are misleading')
 
-fname = f'D={D}_n={n}_N={N:.2e}_L={L}_c={c}'
-subprocess.check_output(f'g++ -std=c++17 -O3 -Wall -Werror -Wextra -Wshadow -Wno-sign-compare simulate.cc && ./a.out {D} {n} {N} {s} {c} {L} {fname}', shell=True)
+fname = f'D={D}_n={n}_N={N:.2e}_L={L}_c={c}_seed={seed}'
+subprocess.check_output(f'g++ -std=c++17 -O3 -Wall -Werror -Wextra -Wshadow -Wno-sign-compare simulate.cc && ./a.out {D} {n} {N} {s} {c} {L} {fname} {seed}', shell=True)
 
 print(f'{fname}.csv')
 
