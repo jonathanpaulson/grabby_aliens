@@ -200,11 +200,17 @@ vector<Civ> simulate(ll D, ld speed, ld n, ll N, ld c, ld L) {
         ld dij = distance(c1.V, c2.V,L);
         ld wij = (dij/speed - (c1.T-c2.T))/2.0;
         ld oij = c2.T + dij/c;
-        ld bij = 2*speed*(c1.T-oij)/dij;
-        assert(bij < 2.0);
+
+        ld dt = abs(c1.T - c2.T);
+        assert(dt > 0);
+        ld angle_b = 1 + sq(speed/c);
+        ld angle_a = (1.0 - sqrt(1.0 - angle_b*(1.0 - sq(dij/(c*dt)))))/angle_b;
+        ld angle = 2*atan((speed/c)*(angle_a/(1-angle_a)));
+        assert(angle < 2.0);
+
         if(c1.T > oij) {
           c1.nsee++;
-          c1.max_angle = max(c1.max_angle, bij);
+          c1.max_angle = max(c1.max_angle, angle);
         }
         c1.min_wait = min(c1.min_wait, wij);
       }
