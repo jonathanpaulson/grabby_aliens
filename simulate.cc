@@ -155,7 +155,7 @@ vector<pair<ld,ld>> to_years(const vector<Civ>& C) {
   return ANS;
 }
 
-vector<Civ> simulate(ll D, ld speed, ld n, ll N, ld c, ld L) {
+vector<Civ> simulate(ll D, ld speed, ld n, ll N, ld c, ld L, ll empty_samples) {
   /*
   vector<Civ> C;
   C.reserve(N);
@@ -189,23 +189,26 @@ vector<Civ> simulate(ll D, ld speed, ld n, ll N, ld c, ld L) {
       }
     }
     if(is_alive) {
-      ll OCC_TRIALS = 100;
-      ll nalive = 0;
-      for(ll k=0; k<OCC_TRIALS; k++) {
-        vector<ld> PT = Civ::random_point(D, L);
-        bool pt_alive = true;
-        for(ll j=0; j<ALIVE.size(); j++) {
-          auto& alive = ALIVE[j];
-          ld d2 = distance2(alive.V, PT, L);
-          bool dead = d2 < sq(speed*(cand.T-alive.T));
-          if(dead) {
-            pt_alive = false;
-            break;
+      if(empty_samples == 0) {
+        cand.percent_empty = 0.0;
+      } else {
+        ll nalive = 0;
+        for(ll k=0; k<empty_samples; k++) {
+          vector<ld> PT = Civ::random_point(D, L);
+          bool pt_alive = true;
+          for(ll j=0; j<ALIVE.size(); j++) {
+            auto& alive = ALIVE[j];
+            ld d2 = distance2(alive.V, PT, L);
+            bool dead = d2 < sq(speed*(cand.T-alive.T));
+            if(dead) {
+              pt_alive = false;
+              break;
+            }
           }
+          if(pt_alive) { nalive++; }
         }
-        if(pt_alive) { nalive++; }
+        cand.percent_empty = static_cast<ld>(nalive)/static_cast<ld>(empty_samples);
       }
-      cand.percent_empty = static_cast<ld>(nalive)/static_cast<ld>(OCC_TRIALS);
 
       cerr << "i=" << i << " |C|=" << ALIVE.size() << " percent_empty=" << cand.percent_empty << endl;
       ALIVE.push_back(cand);
@@ -254,12 +257,13 @@ int main(int, char** argv) {
   ld L = atof(argv[6]);
   string fname = argv[7];
   ll seed = stoll(argv[8]);
+  ll empty_samples = stoll(argv[9]);
 
   RNG.seed(seed);
 
   cerr << "D=" << D << " n=" << n << " N=" << N << " speed=" << speed << " c=" << c << " L=" << L << endl;
 
-  vector<Civ> CIVS = simulate(D, speed, n, N, c, L);
+  vector<Civ> CIVS = simulate(D, speed, n, N, c, L, empty_samples);
   std::ofstream civ_out (fname+".csv", std::ofstream::out);
   for(ll i=0; i<D; i++) {
     civ_out << static_cast<char>('X'+i) << ",";
