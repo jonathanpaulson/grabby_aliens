@@ -31,12 +31,14 @@ XT = []
 T = []
 W = []
 A = []
+E = []
 with open(f'{fname}.csv') as csvfile:
     reader = csv.DictReader(csvfile)
     for row in reader:
         T.append(float(row['OriginTime']))
         W.append(float(row['MinWait']))
         A.append(float(row['MaxAngle']))
+        E.append(float(row['PctEmpty']))
         XT.append((float(row['X']), float(row['OriginTime'])))
         if D>=2:
             XYTW.append((float(row['X']), float(row['Y']), float(row['OriginTime']), float(row['MinWait'])))
@@ -74,6 +76,10 @@ p[0,1].set_xlabel('Index')
 
 p[1,1].plot(sorted(YW))
 p[1,1].set_ylabel('WaitTime (BYr)')
+p[1,1].set_xlabel('Index')
+
+p[2,1].plot(E)
+p[1,1].set_ylabel('% Occupied')
 p[1,1].set_xlabel('Index')
 
 plt.savefig(f'{fname}.png')

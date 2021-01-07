@@ -38,11 +38,16 @@ struct SortedRNG {
 struct Civ {
   Civ(ll D) : V(D, 0.0), T(0.0) {}
 
+  static vector<ld> random_point(ll D, ld L) {
+    vector<ld> R(D, 0.0);
+    for(ll i=0; i<D; i++) {
+      R[i] = r01()*L;
+    }
+    return R;
+  }
   static Civ mk_random(ll D, ld power, ld L, SortedRNG& R) {
     Civ ret(D);
-    for(ll j=0; j<D; j++) {
-      ret.V[j] = r01()*L;
-    }
+    ret.V = random_point(D, L);
 
     ld t = 1.0 - R.next();
     ret.T = pow(t, 1.0/(1.0+power));
@@ -53,12 +58,13 @@ struct Civ {
   ld min_wait = 1e9; // min "wait time" until we see another civ
   ll nsee = 0; // number of other civs whose signals we see at our origin time
   ld max_angle = 0.0; // max "angle" among civs we see at our origin time
+  ld percent_empty = 0.0; // how much of the universe is empty at our origin time
 };
 ostream& operator<<(ostream& o, const Civ& C) {
   for(ll i=0; i<C.V.size(); i++) {
     o << C.V[i] << ",";
   }
-  o << C.T << "," << C.min_wait << "," << C.nsee << "," << C.max_angle;
+  o << C.T << "," << C.min_wait << "," << C.nsee << "," << C.max_angle << "," << C.percent_empty;
   return o;
 }
 
@@ -183,7 +189,25 @@ vector<Civ> simulate(ll D, ld speed, ld n, ll N, ld c, ld L) {
       }
     }
     if(is_alive) {
-      cerr << "i=" << i << " |C|=" << ALIVE.size() << endl;
+      ll OCC_TRIALS = 100;
+      ll nalive = 0;
+      for(ll k=0; k<OCC_TRIALS; k++) {
+        vector<ld> PT = Civ::random_point(D, L);
+        bool pt_alive = true;
+        for(ll j=0; j<ALIVE.size(); j++) {
+          auto& alive = ALIVE[j];
+          ld d2 = distance2(alive.V, PT, L);
+          bool dead = d2 < sq(speed*(cand.T-alive.T));
+          if(dead) {
+            pt_alive = false;
+            break;
+          }
+        }
+        if(pt_alive) { nalive++; }
+      }
+      cand.percent_empty = static_cast<ld>(nalive)/static_cast<ld>(OCC_TRIALS);
+
+      cerr << "i=" << i << " |C|=" << ALIVE.size() << " percent_empty=" << cand.percent_empty << endl;
       ALIVE.push_back(cand);
       last_alive = i;
     }
@@ -240,7 +264,7 @@ int main(int, char** argv) {
   for(ll i=0; i<D; i++) {
     civ_out << static_cast<char>('X'+i) << ",";
   }
-  civ_out << "OriginTime,MinWait,NumberSeen,MaxAngle" << endl;
+  civ_out << "OriginTime,MinWait,NumberSeen,MaxAngle,PctEmpty" << endl;
   for(auto& civ : CIVS) {
     civ_out << civ << endl;
   }
