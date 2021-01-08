@@ -55,7 +55,7 @@ struct Civ {
   }
   vector<ld> V; // position in space
   ld T; // origin time
-  ld min_wait = 1e9; // min "wait time" until we see another civ
+  ld min_arrival = 1e9; // min time when another civ arrives at our origin
   ll nsee = 0; // number of other civs whose signals we see at our origin time
   ld max_angle = 0.0; // max "angle" among civs we see at our origin time
   ld percent_empty = 0.0; // how much of the universe is empty at our origin time
@@ -64,7 +64,7 @@ ostream& operator<<(ostream& o, const Civ& C) {
   for(ll i=0; i<C.V.size(); i++) {
     o << C.V[i] << ",";
   }
-  o << C.T << "," << C.min_wait << "," << C.nsee << "," << C.max_angle << "," << C.percent_empty;
+  o << C.T << "," << C.min_arrival << "," << C.nsee << "," << C.max_angle << "," << C.percent_empty;
   return o;
 }
 
@@ -83,6 +83,7 @@ ld distance(const vector<ld>& A, const vector<ld>& B, ld L) {
   return sqrt(distance2(A,B,L));
 }
 ld sq(ld x) { return x*x; }
+ld cube(ld x) { return x*x*x; }
 
 vector<ld> ratio_distribution(const vector<ld>& NUM, const vector<ld>& DEN) {
   assert(NUM.size() > 0);
@@ -137,10 +138,14 @@ vector<pair<ld,ld>> to_years(const vector<Civ>& C) {
   vector<ld> N_WAIT;
   vector<ld> DEN;
   for(ll i=0; i<C.size(); i++) {
-    N_ORIGIN.push_back(C[i].T);
-    N_WAIT.push_back(C[i].min_wait);
+    ld real_t = cube(C[i].T);
+    ld real_arrival = cube(C[i].min_arrival);
+    ld wait = (real_arrival - real_t) / 2.0;
+
+    N_ORIGIN.push_back(real_t);
+    N_WAIT.push_back(wait);
     if(C[i].nsee == 0) {
-      DEN.push_back(C[i].T);
+      DEN.push_back(real_t);
     }
   }
   
@@ -225,25 +230,24 @@ vector<Civ> simulate(ll D, ld speed, ld n, ll N, ld c, ld L, ll empty_samples) {
       auto c2 = ALIVE[j];
       if(i!=j) {
         ld dij = distance(c1.V, c2.V,L);
-        ld wij = (dij/speed - (c1.T-c2.T))/2.0;
+        ld arrival = c2.T + dij/speed;
         ld oij = c2.T + dij/c;
 
-        ld dt = abs(c1.T - c2.T);
-        assert(dt > 0);
-        ld angle_b = 1 + sq(speed/c);
-        ld angle_a = (1.0 - sqrt(1.0 - angle_b*(1.0 - sq(dij/(c*dt)))))/angle_b;
-        ld angle = 2*atan((speed/c)*(angle_a/(1-angle_a)));
-        assert(angle < 2.0);
 
         if(c1.T > oij) {
           c1.nsee++;
+          ld dt = abs(c1.T - c2.T);
+          assert(dt > 0);
+          ld angle_b = 1 + sq(speed/c);
+          ld angle_a = (1.0 - sqrt(1.0 - angle_b*(1.0 - sq(dij/(c*dt)))))/angle_b;
+          ld angle = 2*atan((speed/c)*(angle_a/(1-angle_a)));
+          assert(0.0 < angle && angle < 2.0);
           c1.max_angle = max(c1.max_angle, angle);
         }
-        c1.min_wait = min(c1.min_wait, wij);
+        c1.min_arrival = min(c1.min_arrival, arrival);
       }
     }
-    // max angle = max{j that i can see in C} bi,j.
-    assert(c1.min_wait < 1e6);
+    assert(c1.min_arrival < 1e6);
   }
   return ALIVE;
 }
@@ -268,7 +272,7 @@ int main(int, char** argv) {
   for(ll i=0; i<D; i++) {
     civ_out << static_cast<char>('X'+i) << ",";
   }
-  civ_out << "OriginTime,MinWait,NumberSeen,MaxAngle,PctEmpty" << endl;
+  civ_out << "OriginTime,MinArrival,NumberSeen,MaxAngle,PctEmpty" << endl;
   for(auto& civ : CIVS) {
     civ_out << civ << endl;
   }

@@ -27,7 +27,6 @@ subprocess.check_output(f'g++ -std=c++17 -O3 -Wall -Werror -Wextra -Wshadow -Wno
 
 print(f'{fname}.csv')
 
-XYTW = []
 XT = []
 T = []
 W = []
@@ -37,12 +36,10 @@ with open(f'{fname}.csv') as csvfile:
     reader = csv.DictReader(csvfile)
     for row in reader:
         T.append(float(row['OriginTime']))
-        W.append(float(row['MinWait']))
+        W.append(float(row['MinArrival']))
         A.append(float(row['MaxAngle']))
         E.append(float(row['PctEmpty']))
         XT.append((float(row['X']), float(row['OriginTime'])))
-        if D>=2:
-            XYTW.append((float(row['X']), float(row['Y']), float(row['OriginTime']), float(row['MinWait'])))
 
 YT = []
 YW = []
@@ -66,7 +63,7 @@ p[0,0].set_ylabel('OriginTime')
 p[0,0].set_xlabel('Index')
 
 p[1,0].plot(sorted(WS))
-p[1,0].set_ylabel('MinWait')
+p[1,0].set_ylabel('MinArrival')
 p[1,0].set_xlabel('Index')
 
 p[2,0].plot(sorted(A))
