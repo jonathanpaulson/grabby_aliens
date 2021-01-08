@@ -99,7 +99,7 @@ vector<ld> ratio_distribution(const vector<ld>& NUM, const vector<ld>& DEN) {
 
   priority_queue<Element,vector<Element>,std::greater<Element>> Q;
   for(ll i=0; i<DEN.size(); i++) {
-    ld value = 13.8/DEN[i] * NUM[0];
+    ld value = 13.787/DEN[i] * NUM[0];
     Q.push(make_pair(value, make_pair(i, static_cast<ll>(0))));
   }
   ll k = Q.size();
