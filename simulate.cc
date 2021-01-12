@@ -56,6 +56,7 @@ struct Civ {
   vector<ld> V; // position in space
   ld T; // origin time
   ld min_arrival = 1e9; // min time when another civ arrives at our origin
+  ld min_see = 1e9; // min time when we see signals from another civ
   ll nsee = 0; // number of other civs whose signals we see at our origin time
   ld max_angle = 0.0; // max "angle" among civs we see at our origin time
   ld percent_empty = 0.0; // how much of the universe is empty at our origin time
@@ -64,7 +65,7 @@ ostream& operator<<(ostream& o, const Civ& C) {
   for(ll i=0; i<C.V.size(); i++) {
     o << C.V[i] << ",";
   }
-  o << C.T << "," << C.min_arrival << "," << C.nsee << "," << C.max_angle << "," << C.percent_empty;
+  o << C.T << "," << C.min_arrival << "," << C.min_see << "," << C.nsee << "," << C.max_angle << "," << C.percent_empty;
   return o;
 }
 
@@ -233,6 +234,9 @@ vector<Civ> simulate(ll D, ld speed, ld n, ll N, ld c, ld L, ll empty_samples) {
         ld arrival = c2.T + dij/speed;
         ld oij = c2.T + dij/c;
 
+        // t*(s+c) = d + s*t0 + c*t1
+        ld see_time = (dij + speed*c1.T + c*c2.T) / (speed + c);
+        c1.min_see = min(c1.min_see, see_time);
 
         if(c1.T > oij) {
           c1.nsee++;
@@ -248,6 +252,7 @@ vector<Civ> simulate(ll D, ld speed, ld n, ll N, ld c, ld L, ll empty_samples) {
       }
     }
     assert(c1.min_arrival < 1e6);
+    assert(c1.min_see < 1e6);
   }
   return ALIVE;
 }
@@ -272,7 +277,7 @@ int main(int, char** argv) {
   for(ll i=0; i<D; i++) {
     civ_out << static_cast<char>('X'+i) << ",";
   }
-  civ_out << "OriginTime,MinArrival,NumberSeen,MaxAngle,PctEmpty" << endl;
+  civ_out << "OriginTime,MinArrival,MinSee,NumberSeen,MaxAngle,PctEmpty" << endl;
   for(auto& civ : CIVS) {
     civ_out << civ << endl;
   }

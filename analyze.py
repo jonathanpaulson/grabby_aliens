@@ -32,6 +32,7 @@ T = []
 W = []
 A = []
 E = []
+S = []
 with open(f'{fname}.csv') as csvfile:
     reader = csv.DictReader(csvfile)
     for row in reader:
@@ -39,6 +40,7 @@ with open(f'{fname}.csv') as csvfile:
         W.append(float(row['MinArrival']))
         A.append(float(row['MaxAngle']))
         E.append(float(row['PctEmpty']))
+        S.append(float(row['MinSee']))
         XT.append((float(row['X']), float(row['OriginTime'])))
 
 YT = []
@@ -52,10 +54,11 @@ with open(f'{fname}_years.txt') as yearfile:
 T50 = np.median(T)
 TS = [x/T50 for x in T]
 WS = [x/T50 for x in W]
+SS = [x/T50 for x in S]
 
 print(np.mean(E))
 
-fig, p = plt.subplots(3,2)
+fig, p = plt.subplots(4,2,constrained_layout=True)
 fig.suptitle(f'D={D} n={n} N={N:.2e} L={L} |C|={len(TS)} |C|/L^D={len(TS)/L**D}')
 
 p[0,0].plot(TS)
@@ -81,6 +84,10 @@ p[1,1].set_xlabel('Index')
 p[2,1].plot(list(reversed(sorted(E))))
 p[2,1].set_ylabel('% Empty')
 p[2,1].set_xlabel('Index')
+
+p[3,0].plot(sorted(SS))
+p[3,0].set_ylabel('MinSee')
+p[3,0].set_xlabel('Index')
 
 plt.savefig(f'{fname}.png')
 subprocess.check_output(f'cmd.exe /C start {fname}.png', shell=True)
