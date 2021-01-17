@@ -1,3 +1,4 @@
+import os
 import sys
 import csv
 import numpy as np
@@ -43,13 +44,11 @@ with open(f'{fname}.csv') as csvfile:
         S.append(float(row['MinSee']))
         XT.append((float(row['X']), float(row['OriginTime'])))
 
-YT = []
-YW = []
+YEARS = []
 with open(f'{fname}_years.txt') as yearfile:
     reader = csv.DictReader(yearfile)
     for row in reader:
-        YT.append(float(row['OriginTime']))
-        YW.append(float(row['MinWait']))
+        YEARS.append(row)
 
 T50 = np.median(T)
 TS = [x/T50 for x in T]
@@ -58,95 +57,41 @@ SS = [x/T50 for x in S]
 
 print(np.mean(E))
 
-fig, p = plt.subplots(4,2,constrained_layout=True)
+fig, p = plt.subplots(4,2,constrained_layout=True,figsize=(12,12))
 fig.suptitle(f'D={D} n={n} N={N:.2e} L={L} |C|={len(TS)} |C|/L^D={len(TS)/L**D}')
 
-p[0,0].plot(TS)
-p[0,0].set_ylabel('OriginTime')
-p[0,0].set_xlabel('Index')
+def plot(ax, x, y, ylabel, log):
+    ax.minorticks_on()
+    ax.grid(b=True, which='major', axis='both')
+    ax.tick_params(axis='both', which='both', bottom=True, left=True)
+    ax.set_xlabel('Percentile')
+    ax.plot(x, y)
+    ax.set_ylabel(ylabel)
+    if log:
+        ax.set_yscale('log')
 
-p[1,0].plot(sorted(WS))
-p[1,0].set_ylabel('MinArrival')
-p[1,0].set_xlabel('Index')
+civs_x = [float(i)/len(T) for i in range(len(T))]
+years_x = [float(i)/len(YEARS) for i in range(len(YEARS))]
 
-p[2,0].plot(sorted(A))
-p[2,0].set_ylabel('MaxAngle')
-p[2,0].set_xlabel('Index')
+plot(p[0,0], civs_x, TS, 'Origin', log=False)
+origin_years = sorted([row['OriginTime'] for row in YEARS])
+plot(p[0,1], years_x, origin_years, 'Origin (BYr)', log=True)
 
-p[0,1].plot(sorted(YT))
-p[0,1].set_ylabel('OriginTime (BYr)')
-p[0,1].set_xlabel('Index')
+plot(p[1,0], civs_x, sorted(WS), 'MinArrival', log=False)
+wait_years = sorted([row['MinWait'] for row in YEARS])
+plot(p[1,1], years_x, wait_years, 'MinWait (BYr)', log=True)
 
-p[1,1].plot(sorted(YW))
-p[1,1].set_ylabel('WaitTime (BYr)')
-p[1,1].set_xlabel('Index')
+plot(p[2,0], civs_x, sorted(SS), 'MinSee', log=False)
 
-p[2,1].plot(list(reversed(sorted(E))))
-p[2,1].set_ylabel('% Empty')
-p[2,1].set_xlabel('Index')
+seti_years = sorted([row['MinSETI'] for row in YEARS])
+plot(p[2,1], years_x, seti_years, 'MinSETI (BYr)', log=True)
 
-p[3,0].plot(sorted(SS))
-p[3,0].set_ylabel('MinSee')
-p[3,0].set_xlabel('Index')
+plot(p[3,0], civs_x, sorted(A), 'MaxAngle', log=False)
+if any([e for e in E]):
+    plot(p[3,1], civs_x, list(reversed(sorted(E))), '% Empty', log=False)
+else:
+    fig.delaxes(p[3,1])
 
 plt.savefig(f'{fname}.png')
 subprocess.check_output(f'cmd.exe /C start {fname}.png', shell=True)
-
-assert False
-
-
-if D == 1:
-    XT = sorted(XT)
-    meeting_points = []
-    GCs_and_meeting_points = []
-    for i in range(len(XT) - 1):
-        x0, t0 = XT[i]
-        x1, t1 = XT[i+1]
-        x = ((s*(t1 - t0)) + (x0 + x1)) / 2
-        t = t0 + (x - x0)*(1/s)
-        GCs_and_meeting_points.append((x0, t0))
-        GCs_and_meeting_points.append((x, t))
-        meeting_points.append((x, t))
-    GCs_and_meeting_points.append((XT[-1]))
-
-    plt.suptitle(f'D={D} n={n} N={N:.2e} L={L} |C|={len(TS)} |C|/L^D={len(TS)/L**D}')
-    plt.figure(figsize=(6, 2.5))
-    ax = plt.subplot(1, 1, 1)
-
-    xs = [x for x,t in XT]
-    ts = [t for x,t in XT]
-    plt.scatter(xs, ts, s=3.5, color='blue', label="GC origin")
-
-    plt.plot(*zip(*GCs_and_meeting_points), linewidth=0.85, color='purple', label="GC expansion boundary")
-    plt.xlabel("x", fontsize=11)
-    plt.xticks(fontsize=9)
-    plt.ylabel("t", fontsize=11)
-    plt.yticks(fontsize=9)
-    # plt.ylim(None, 0.47)
-
-    plt.grid(True)
-    ax.set_axisbelow(True)
-
-    plt.legend(prop={'size': 7})
-
-    plt.subplots_adjust(bottom=0.2)
-    plt.savefig("1d-plot.png", dpi=400)
-    subprocess.check_output(f'cmd.exe /C start 1d-plot.png', shell=True)
-
-if D == 2:
-    resolution = 250
-    fig = plt.figure(figsize=(6, 6))
-    ax = fig.add_subplot(1, 1, 1, projection='3d')
-    for x,y,t,w in XYTW:
-        h = np.linspace(0, w, resolution)
-        theta = np.linspace(0, 2*np.pi, resolution)
-        X = np.outer(s*np.cos(theta), h) + x
-        Y = np.outer(s*np.sin(theta), h) + y
-        Z = np.outer(np.ones(np.size(theta)), h) + t
-        ax.plot_surface(X, Y, Z, color=matplotlib.cm.rainbow(np.random.rand()), alpha=0.4)
-    ax.view_init(elev=-20)
-    ax.set_xlabel('X')
-    ax.set_ylabel('Y')
-    ax.set_zlabel('T')
-    plt.savefig("2d-plot.png", dpi=200)
-    subprocess.check_output(f'cmd.exe /C start 2d-plot.png', shell=True)
+#subprocess.check_output(f'display {fname}.png', shell=True)
