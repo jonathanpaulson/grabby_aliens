@@ -67,16 +67,16 @@ years_x = [float(i)/len(YEARS) for i in range(len(YEARS))]
 
 plot(p[0,0], civs_x, TS, 'Origin', log=False)
 origin_years = sorted([float(row['OriginTime']) for row in YEARS])
-plot(p[0,1], years_x, origin_years, 'Origin (GYr)', log=True)
+plot(p[0,1], years_x, origin_years, 'Origin (Gyr)', log=True)
 
 plot(p[1,0], civs_x, sorted(WS), 'MinArrival', log=False)
 wait_years = sorted([float(row['MinWait']) for row in YEARS])
-plot(p[1,1], years_x, wait_years, 'MinWait (GYr)', log=True)
+plot(p[1,1], years_x, wait_years, 'MinWait (Gyr)', log=True)
 
 plot(p[2,0], civs_x, sorted(SS), 'MinSee', log=False)
 
 seti_years = sorted([float(row['MinSETI']) for row in YEARS])
-plot(p[2,1], years_x, seti_years, 'MinSETI (GYr)', log=True)
+plot(p[2,1], years_x, seti_years, 'MinSETI (Gyr)', log=True)
 
 angles = sorted([float(row['MaxAngle']) for row in CIVS])
 plot(p[3,0], civs_x, angles, 'MaxAngle', log=False)
