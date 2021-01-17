@@ -8,15 +8,15 @@ import argparse
 import subprocess
 import math
 
-parser = argparse.ArgumentParser()
-parser.add_argument('--D', type=int)
-parser.add_argument('--n', type=float)
-parser.add_argument('--N', type=str)
-parser.add_argument('--c', type=float, default=1.0)
-parser.add_argument('--L', type=float, default=1.0)
-parser.add_argument('--s', type=float, default=1.0)
-parser.add_argument('--seed', type=float, default=0)
-parser.add_argument('--empty_samples', type=int, default=0)
+parser = argparse.ArgumentParser(description='Run Grabby Aliens model')
+parser.add_argument('--D', type=int, help='Dimensions of space')
+parser.add_argument('--n', type=float, help='Origin time power-law')
+parser.add_argument('--N', type=str, help='Number of potential civilizations')
+parser.add_argument('--c', type=float, default=1.0, help='The speed of light')
+parser.add_argument('--L', type=float, default=1.0, help='The size of the universe')
+parser.add_argument('--s', type=float, default=1.0, help='The speed of civ expansion')
+parser.add_argument('--seed', type=float, default=0, help='A random seed')
+parser.add_argument('--empty_samples', type=int, default=0, help='How many points to sample when estimating how full the universe is')
 
 args = parser.parse_args()
 D,n,N,s,c,L,seed,empty_samples = args.D,args.n,int(float(args.N)),args.s,args.c,args.L,args.seed,args.empty_samples
