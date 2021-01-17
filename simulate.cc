@@ -29,7 +29,6 @@ struct SortedRNG {
     LnCurMax += log(r01())/I;
     I--;
     ld ans = exp(LnCurMax);
-    //cerr << setprecision(30) << LnCurMax << " " << ans << endl;
     return ans;
   }
   ll I;
@@ -70,8 +69,9 @@ ostream& operator<<(ostream& o, const Civ& C) {
   return o;
 }
 
-// Between every pair of points i,j is a Euclidean distance of di,j = ((xi-xj)2 + (yi-yj)2 + (zi-zj)2)1/2.
-// Use “hypertorus” distance metric, that identifies opposite sides of box [0,1]d. (Can calc via, instead of dx = xi-xj, use (let a = abs(xi-xj), if a < ½, use a, else use 1-a).
+// Between every pair of points i,j is a Euclidean distance of dij = sqrt((xi-xj)^2 + (yi-yj)^2 + (zi-zj)^2)
+// Use “hypertorus” distance metric, that identifies opposite sides of box [0,L]^D.
+// i.e. instead of "dx=xi-xj", use "dx=abs(xi-xj); dx=min(dx,L-dx)"
 ld distance2(const vector<ld>& A, const vector<ld>& B, ld L) {
   ld d2 = 0.0;
   for(ll i=0; i<A.size(); i++) {
@@ -111,8 +111,8 @@ vector<ld> ratio_distribution(const vector<ld>& NUM, const vector<ld>& DEN) {
     Element x = Q.top(); Q.pop();
     ll di = x.second.first;
     ll ni = x.second.second;
+    // Only sample every kth element, to save memory
     if(ai%k==0) {
-      //cerr << "DEBUG: " << x.first << " " << NUM[ni] << " " << DEN[di] << " di=" << di << " DEN.size=" << DEN.size() << endl;
       ANS.push_back(x.first);
     }
     ai++;
@@ -170,11 +170,16 @@ vector<tuple<ld,ld,ld>> to_years(const vector<Civ>& C) {
 }
 
 vector<Civ> simulate(ll D, ld speed, ld n, ll N, ld c, ld L, ll empty_samples) {
-  /*
+  /* This is a simpler way of generating the candidate civs.
+     Instead, I generate them one-by-one by generating the origin times already in sorted
+     order (see SortedRNG for more details on this).
+
   vector<Civ> C;
   C.reserve(N);
   for(ll i=0; i<N; i++) {
-    C.push_back(Civ::mk_random(D, n, L));
+    C.push_back(Civ(D));
+    C[i].V = Civ::random_point(D, L);
+    C[i].T = r01();
   }
   sort(C.begin(), C.end(), [](Civ& A, Civ& B) { return A.T < B.T; });
   */
@@ -292,7 +297,7 @@ int main(int, char** argv) {
   civ_out.close();
 
   vector<tuple<ld,ld,ld>> years = to_years(CIVS);
-  std::ofstream year_out (fname+"_years.txt", std::ofstream::out);
+  std::ofstream year_out (fname+"_years.csv", std::ofstream::out);
   year_out << "OriginTime,MinWait,MinSETI" << endl;
   for(auto& y : years) {
     year_out << get<0>(y) << "," << get<1>(y) << "," << get<2>(y) << endl;

@@ -26,37 +26,29 @@ if s != 1.0:
 fname = f'D={D}_n={n}_N={N:.2e}_L={L}_c={c}_seed={seed}'
 subprocess.check_output(f'g++ -std=c++17 -O3 -Wall -Werror -Wextra -Wshadow -Wno-sign-compare simulate.cc && ./a.out {D} {n} {N} {s} {c} {L} {fname} {seed} {empty_samples}', shell=True)
 
-print(f'{fname}.csv')
+print(f'Generated data in {fname}.csv and {fname}_years.csv')
 
-XT = []
-T = []
-W = []
-A = []
-E = []
-S = []
+# Read CIV data
+CIVS = []
 with open(f'{fname}.csv') as csvfile:
     reader = csv.DictReader(csvfile)
     for row in reader:
-        T.append(float(row['OriginTime']))
-        W.append(float(row['MinArrival']))
-        A.append(float(row['MaxAngle']))
-        E.append(float(row['PctEmpty']))
-        S.append(float(row['MinSee']))
-        XT.append((float(row['X']), float(row['OriginTime'])))
+        CIVS.append(row)
 
+# Read years data
 YEARS = []
-with open(f'{fname}_years.txt') as yearfile:
+with open(f'{fname}_years.csv') as yearfile:
     reader = csv.DictReader(yearfile)
     for row in reader:
         YEARS.append(row)
 
-T50 = np.median(T)
-TS = [x/T50 for x in T]
-WS = [x/T50 for x in W]
-SS = [x/T50 for x in S]
+# Rescale model times so median(Origin)=1.0
+T50 = np.median([float(row['OriginTime']) for row in CIVS])
+TS = [float(row['OriginTime'])/T50 for row in CIVS]
+WS = [float(row['MinArrival'])/T50 for row in CIVS]
+SS = [float(row['MinSee'])/T50 for row in CIVS]
 
-print(np.mean(E))
-
+# Make graphs
 fig, p = plt.subplots(4,2,constrained_layout=True,figsize=(12,12))
 fig.suptitle(f'D={D} n={n} N={N:.2e} L={L} |C|={len(TS)} |C|/L^D={len(TS)/L**D}')
 
@@ -70,7 +62,7 @@ def plot(ax, x, y, ylabel, log):
     if log:
         ax.set_yscale('log')
 
-civs_x = [float(i)/len(T) for i in range(len(T))]
+civs_x = [float(i)/len(CIVS) for i in range(len(CIVS))]
 years_x = [float(i)/len(YEARS) for i in range(len(YEARS))]
 
 plot(p[0,0], civs_x, TS, 'Origin', log=False)
@@ -86,12 +78,16 @@ plot(p[2,0], civs_x, sorted(SS), 'MinSee', log=False)
 seti_years = sorted([row['MinSETI'] for row in YEARS])
 plot(p[2,1], years_x, seti_years, 'MinSETI (BYr)', log=True)
 
-plot(p[3,0], civs_x, sorted(A), 'MaxAngle', log=False)
-if any([e for e in E]):
+angles = sorted([float(row['MaxAngle']) for row in CIVS])
+plot(p[3,0], civs_x, angles, 'MaxAngle', log=False)
+E = [float(row['PctEmpty']) for row in CIVS]
+if any([e for e in E]): # if we generated PctEmpty data
     plot(p[3,1], civs_x, list(reversed(sorted(E))), '% Empty', log=False)
 else:
     fig.delaxes(p[3,1])
 
 plt.savefig(f'{fname}.png')
+# Open PNG in windows
+# Switch which line is commented for Linux
 subprocess.check_output(f'cmd.exe /C start {fname}.png', shell=True)
 #subprocess.check_output(f'display {fname}.png', shell=True)
