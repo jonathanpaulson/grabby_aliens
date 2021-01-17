@@ -118,7 +118,7 @@ vector<ld> ratio_distribution(const vector<ld>& NUM, const vector<ld>& DEN) {
     ai++;
 
     if(ni+1 < NUM.size()) {
-      ld value = 13.8/DEN[di] * NUM[ni+1];
+      ld value = 13.787/DEN[di] * NUM[ni+1];
       Q.push(make_pair(value, make_pair(di, ni+1)));
     } else if(Q.empty() && ai%k!=0) { // always include the max
       ANS.push_back(x.first);
