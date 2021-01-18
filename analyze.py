@@ -38,7 +38,7 @@ for n in ns:
 
     DATA[n] = (CIVS, YEARS)
 
-C = '.'.join([str(len(CIVS)) for (CIVS,YEARS) in DATA.values()])
+C = ','.join([str(len(CIVS)) for (CIVS,YEARS) in DATA.values()])
 # Make graphs
 fig, p = plt.subplots(4,2,constrained_layout=True,figsize=(12,12))
 fig.suptitle(f'D={D} n={n} N={N:.2e} L={L} c={c} s={s} |C|={C}')
