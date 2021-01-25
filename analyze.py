@@ -19,16 +19,15 @@ parser.add_argument('--seed', type=float, default=0, help='A random seed')
 parser.add_argument('--empty_samples', type=int, default=0, help='How many points to sample when estimating how full the universe is')
 
 args = parser.parse_args()
-D,ns,N,s,cs,L,seed,empty_samples,scenarios = args.D,args.n,int(float(args.N)),args.s,args.c,args.L,args.seed,args.empty_samples,args.scenarios
+D,ns,N,s,cs,L,seed,empty_samples = args.D,args.n,int(float(args.N)),args.s,args.c,args.L,args.seed,args.empty_samples
 
 cs = [1.0/float(c) for c in cs.split(',')]
 ns = [float(n) for n in ns.split(',')]
 
 DATA = {}
-#For generating table
-#for (c, n) in [(2.0, 17), (1.25, 35)]:
-for c in cs:
-    for n in ns:
+for c,n in zip(cs,ns):
+#for c in cs:
+#    for n in ns:
         proper_n = (n+1)/3
         fname = f'D={D}_n={n}_N={N:.2e}_L={L}_c={c}_seed={seed}'
         subprocess.check_output(f'g++ -std=c++17 -O3 -Wall -Werror -Wextra -Wshadow -Wno-sign-compare simulate.cc && ./a.out {D} {n} {N} {s} {c} {L} {fname} {seed} {empty_samples}', shell=True)
@@ -53,8 +52,9 @@ c_str = ','.join([str(c) for c,n in DATA.keys()])
 fig, p = plt.subplots(4,len(cs)+1,constrained_layout=True,figsize=(18,12))
 
 def getLabels():
-    return ['Origin', 'Origin (Gyr)', 'MinArrival', 'MinTillMeet (Gyr)', 'MinSee',
-            'MinTillSee (Gyr)', 'MaxAngle', '% Empty']
+    return ['Origin', 'MinArrival', 'MinSee',
+            'Origin (Gyr)', 'MinTillMeet (Gyr)', 'MinTillSee (Gyr)',
+            'MaxAngle', '% Empty']
 
 def getData(CIVS, YEARS, label):
     civs_x = [float(i)/len(CIVS) for i in range(len(CIVS))]
@@ -90,7 +90,8 @@ def getData(CIVS, YEARS, label):
     return (x,y)
 
 k1 = (2.0, 6.0)
-k2 = (1.25, 12.0)
+k2 = (4.0/3.0, 12.0)
+
 print('Name,p1,p25,p75,p1,p25,p75')
 for label in getLabels():
     C1,Y1 = DATA[k1]
