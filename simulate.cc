@@ -258,7 +258,7 @@ vector<Civ> simulate(ll D, ld speed, ld n, ll N, ld c, ld L, ll empty_samples) {
           ld angle_b = 1 + sq(speed/c);
           ld angle_a = (1.0 - sqrt(1.0 - angle_b*(1.0 - sq(dij/(c*dt)))))/angle_b;
           ld angle = 2*atan((speed/c)*(angle_a/(1-angle_a)));
-          assert(0.0 < angle && angle < 2.0);
+          assert(0.0 < angle && angle < M_PI);
           c1.max_angle = max(c1.max_angle, angle);
         }
         c1.min_arrival = min(c1.min_arrival, arrival);
