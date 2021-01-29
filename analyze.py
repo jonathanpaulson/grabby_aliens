@@ -15,23 +15,27 @@ parser.add_argument('--N', type=str, help='Number of potential civilizations')
 parser.add_argument('--c', type=str, default='1.0', help='The speed of light')
 parser.add_argument('--L', type=float, default=1.0, help='The size of the universe')
 parser.add_argument('--s', type=float, default=1.0, help='The speed of civ expansion')
+parser.add_argument('--m', type=float, default=2.0/3.0, help='Scale factor power')
 parser.add_argument('--seed', type=float, default=0, help='A random seed')
 parser.add_argument('--empty_samples', type=int, default=0, help='How many points to sample when estimating how full the universe is')
 
 args = parser.parse_args()
-D,ns,N,s,cs,L,seed,empty_samples = args.D,args.n,int(float(args.N)),args.s,args.c,args.L,args.seed,args.empty_samples
+D,ns,N,s,m,cs,L,seed,empty_samples = args.D,args.n,int(float(args.N)),args.s,args.m,args.c,args.L,args.seed,args.empty_samples
 
 cs = [1.0/float(c) for c in cs.split(',')]
 ns = [float(n) for n in ns.split(',')]
 
 DATA = {}
-for c,n in zip(cs,ns):
-#for c in cs:
-#    for n in ns:
+#for c,n in zip(cs,ns):
+for c in cs:
+    for n in ns:
         proper_n = (n+1)/3
-        fname = f'D={D}_n={n}_N={N:.2e}_L={L}_c={c}_seed={seed}'
-        subprocess.check_output(f'g++ -std=c++17 -O3 -Wall -Werror -Wextra -Wshadow -Wno-sign-compare simulate.cc && ./a.out {D} {n} {N} {s} {c} {L} {fname} {seed} {empty_samples}', shell=True)
-        print(f'Generated data in {fname}.csv and {fname}_years.csv')
+        fname = f'D={D}_n={n}_N={N:.2e}_s={s}_c={c}_L={L}_seed={seed}_empty={empty_samples}_m={m}'
+        if os.path.exists(f'{fname}.csv') and os.path.exists(f'{fname}_years.csv'):
+            print(f'Already had data for {fname}.csv and {fname}_years.csv')
+        else:
+            subprocess.check_output(f'g++ -std=c++17 -O3 -Wall -Werror -Wextra -Wshadow -Wno-sign-compare simulate.cc && ./a.out {D} {n} {N} {s} {c} {L} {fname} {seed} {empty_samples} {m}', shell=True)
+            print(f'Generated data in {fname}.csv and {fname}_years.csv')
 
         # Read CIV data
         with open(f'{fname}.csv') as csvfile:
@@ -47,9 +51,6 @@ for c,n in zip(cs,ns):
 C = ','.join([str(len(CIVS)) for (CIVS,YEARS) in DATA.values()])
 n_str = ','.join([str(n) for c,n in DATA.keys()])
 c_str = ','.join([str(c) for c,n in DATA.keys()])
-
-# Make graphs
-fig, p = plt.subplots(4,len(cs)+1,constrained_layout=True,figsize=(18,12))
 
 def getLabels():
     return ['Origin', 'MinArrival', 'MinSee',
@@ -89,16 +90,16 @@ def getData(CIVS, YEARS, label):
         assert False, f'Unknown label={label}'
     return (x,y)
 
-k1 = (2.0, 6.0)
-k2 = (4.0/3.0, 12.0)
 
-print('Name,p1,p25,p75,p1,p25,p75')
-for label in getLabels():
-    C1,Y1 = DATA[k1]
-    C2,Y2 = DATA[k2]
-    x1,y1 = getData(C1, Y1, label)
-    x2,y2 = getData(C2, Y2, label)
-    print(f'{label},{np.percentile(y1, 1)},{np.percentile(y1, 25)},{np.percentile(y1, 75)},{np.percentile(y2, 1)},{np.percentile(y2, 25)},{np.percentile(y2, 75)}')
+#k1 = (2.0, 6.0)
+#k2 = (4.0/3.0, 12.0)
+#print('Name,p1,p25,p75,p1,p25,p75')
+#for label in getLabels():
+#    C1,Y1 = DATA[k1]
+#    C2,Y2 = DATA[k2]
+#    x1,y1 = getData(C1, Y1, label)
+#    x2,y2 = getData(C2, Y2, label)
+#    print(f'{label},{np.percentile(y1, 1)},{np.percentile(y1, 25)},{np.percentile(y1, 75)},{np.percentile(y2, 1)},{np.percentile(y2, 25)},{np.percentile(y2, 75)}')
 
 def plot(ax, label, target_c, log):
     ax.minorticks_on()
@@ -115,6 +116,17 @@ def plot(ax, label, target_c, log):
     ax.set_ylabel(label)
     if log:
         ax.set_yscale('log')
+
+#Also, there are now 2E6 galaxies/GLyr^3
+#(Conselice et al. 2019). Thus model box has G = 2E6*(13.8/τ) 3 galaxies. If s&lt;c, then G is (c/s) 3
+#times larger.
+for (c,n),(CIVS,YEARS) in DATA.items():
+    T50 = np.median([float(row['OriginTime']) for row in CIVS])
+    G = 2e6*pow(13.8/T50, 3)*pow(c/s, 3) / len(CIVS)
+    print(n,G)
+
+# Make graphs
+fig, p = plt.subplots(4,len(cs)+1,constrained_layout=True,figsize=(18,12))
 
 plot(p[0,0], 'Origin', cs[0], log=False)
 plot(p[1,0], 'MinArrival', cs[0], log=False)

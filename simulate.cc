@@ -85,7 +85,6 @@ ld distance(const vector<ld>& A, const vector<ld>& B, ld L) {
   return sqrt(distance2(A,B,L));
 }
 ld sq(ld x) { return x*x; }
-ld cube(ld x) { return x*x*x; }
 
 vector<ld> ratio_distribution(const vector<ld>& NUM, const vector<ld>& DEN) {
   assert(NUM.size() > 0);
@@ -132,7 +131,7 @@ vector<ld> ratio_distribution(const vector<ld>& NUM, const vector<ld>& DEN) {
   return ANS;
 }
 
-vector<tuple<ld,ld,ld>> to_years(const vector<Civ>& C) {
+vector<tuple<ld,ld,ld>> to_years(const vector<Civ>& C, ld m) {
   for(ll i=0; i+1<C.size(); i++) {
     assert(C[i].T < C[i+1].T);
   }
@@ -141,9 +140,11 @@ vector<tuple<ld,ld,ld>> to_years(const vector<Civ>& C) {
   vector<ld> N_SEE;
   vector<ld> DEN;
   for(ll i=0; i<C.size(); i++) {
-    ld real_t = cube(C[i].T);
-    ld real_arrival = cube(C[i].min_arrival);
-    ld real_see = cube(C[i].min_see);
+    ld time_power = 1.0 / (1.0 - m);
+    ld real_t = pow(C[i].T, time_power);
+    ld real_arrival = pow(C[i].min_arrival, time_power);
+    ld real_see = pow(C[i].min_see, time_power);
+
     ld wait = (real_arrival - real_t) / 2.0;
     ld wait_see = max(static_cast<ld>(0.0), real_see - real_t);
 
@@ -280,6 +281,7 @@ int main(int, char** argv) {
   string fname = argv[7];
   ll seed = stoll(argv[8]);
   ll empty_samples = stoll(argv[9]);
+  ld m = atof(argv[10]);
 
   RNG.seed(seed);
 
@@ -296,7 +298,7 @@ int main(int, char** argv) {
   }
   civ_out.close();
 
-  vector<tuple<ld,ld,ld>> years = to_years(CIVS);
+  vector<tuple<ld,ld,ld>> years = to_years(CIVS, m);
   std::ofstream year_out (fname+"_years.csv", std::ofstream::out);
   year_out << "OriginTime,MinWait,MinSETI" << endl;
   for(auto& y : years) {
