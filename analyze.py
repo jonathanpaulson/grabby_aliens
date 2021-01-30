@@ -12,7 +12,7 @@ parser = argparse.ArgumentParser(description='Run Grabby Aliens model')
 parser.add_argument('--D', type=int, help='Dimensions of space')
 parser.add_argument('--n', type=str, help='Origin time power-law; can pass multiple comma-separated values')
 parser.add_argument('--N', type=str, help='Number of potential civilizations')
-parser.add_argument('--c', type=str, default='1.0', help='The speed of light')
+parser.add_argument('--sc', type=str, default='1.0', help='The speed of light')
 parser.add_argument('--L', type=float, default=1.0, help='The size of the universe')
 parser.add_argument('--s', type=float, default=1.0, help='The speed of civ expansion')
 parser.add_argument('--m', type=float, default=2.0/3.0, help='Scale factor power')
@@ -20,9 +20,9 @@ parser.add_argument('--seed', type=float, default=0, help='A random seed')
 parser.add_argument('--empty_samples', type=int, default=0, help='How many points to sample when estimating how full the universe is')
 
 args = parser.parse_args()
-D,ns,N,s,m,cs,L,seed,empty_samples = args.D,args.n,int(float(args.N)),args.s,args.m,args.c,args.L,args.seed,args.empty_samples
+D,ns,N,s,m,sc,L,seed,empty_samples = args.D,args.n,int(float(args.N)),float(args.s),args.m,args.sc,args.L,args.seed,args.empty_samples
 
-cs = [1.0/float(c) for c in cs.split(',')]
+cs = [s/float(sc_ratio) for sc_ratio in sc.split(',')]
 ns = [float(n) for n in ns.split(',')]
 
 DATA = {}
@@ -31,14 +31,14 @@ for c in cs:
     for n in ns:
         proper_n = (n+1)/3
         fname = f'D={D}_n={n}_N={N:.2e}_s={s}_c={c}_L={L}_seed={seed}_empty={empty_samples}_m={m}'
-        if os.path.exists(f'{fname}.csv') and os.path.exists(f'{fname}_years.csv'):
-            print(f'Already had data for {fname}.csv and {fname}_years.csv')
+        if os.path.exists(f'{fname}_civs.csv') and os.path.exists(f'{fname}_years.csv'):
+            print(f'Already had data for {fname}_civs.csv and {fname}_years.csv')
         else:
             subprocess.check_output(f'g++ -std=c++17 -O3 -Wall -Werror -Wextra -Wshadow -Wno-sign-compare simulate.cc && ./a.out {D} {n} {N} {s} {c} {L} {fname} {seed} {empty_samples} {m}', shell=True)
-            print(f'Generated data in {fname}.csv and {fname}_years.csv')
+            print(f'Generated data in {fname}_civs.csv and {fname}_years.csv')
 
         # Read CIV data
-        with open(f'{fname}.csv') as csvfile:
+        with open(f'{fname}_civs.csv') as csvfile:
             CIVS = list(csv.DictReader(csvfile))
 
         # Read years data

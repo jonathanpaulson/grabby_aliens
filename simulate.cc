@@ -288,7 +288,7 @@ int main(int, char** argv) {
   cerr << "D=" << D << " n=" << n << " N=" << N << " speed=" << speed << " c=" << c << " L=" << L << endl;
 
   vector<Civ> CIVS = simulate(D, speed, n, N, c, L, empty_samples);
-  std::ofstream civ_out (fname+".csv", std::ofstream::out);
+  std::ofstream civ_out (fname+"_civs.csv", std::ofstream::out);
   for(ll i=0; i<D; i++) {
     civ_out << static_cast<char>('X'+i) << ",";
   }
