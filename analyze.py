@@ -18,6 +18,8 @@ parser.add_argument('--D', type=int, default=3, help='Number of spatial dimensio
 parser.add_argument('--L', type=float, default=1.0, help='The size of the universe (default 1.0)')
 parser.add_argument('--seed', type=float, default=0, help='A random seed (default 0)')
 parser.add_argument('--empty_samples', type=int, default=0, help='How precisely to estimate how full the universe is (default 0, meaning no estimate at all)')
+parser.add_argument('--table_1', action='store_true')
+parser.add_argument('--figure_12', action='store_true')
 
 args = parser.parse_args()
 D,ns,N,s,m,sc,L,seed,empty_samples = args.D,args.n,int(float(args.N)),float(args.s),args.m,args.sc,args.L,args.seed,args.empty_samples
@@ -90,16 +92,17 @@ def getData(CIVS, YEARS, label):
     return (x,y)
 
 
-# Table 1
-# k1 = (2.0, 6.0)
-# k2 = (4.0/3.0, 12.0)
-# print('Name,p1,p25,p75,p1,p25,p75')
-# for label in getLabels():
-#    C1,Y1 = DATA[k1]
-#    C2,Y2 = DATA[k2]
-#    x1,y1 = getData(C1, Y1, label)
-#    x2,y2 = getData(C2, Y2, label)
-#    print(f'{label},{np.percentile(y1, 1)},{np.percentile(y1, 25)},{np.percentile(y1, 75)},{np.percentile(y2, 1)},{np.percentile(y2, 25)},{np.percentile(y2, 75)}')
+if args.table_1:
+    # Table 1
+    k1 = (2.0, 6.0)
+    k2 = (4.0/3.0, 12.0)
+    print('Name,p1,p25,p75,p1,p25,p75')
+    for label in getLabels():
+       C1,Y1 = DATA[k1]
+       C2,Y2 = DATA[k2]
+       x1,y1 = getData(C1, Y1, label)
+       x2,y2 = getData(C2, Y2, label)
+       print(f'{label},{np.percentile(y1, 1)},{np.percentile(y1, 25)},{np.percentile(y1, 75)},{np.percentile(y2, 1)},{np.percentile(y2, 25)},{np.percentile(y2, 75)}')
 
 def plot(ax, label, target_c, log):
     ax.minorticks_on()
@@ -116,14 +119,14 @@ def plot(ax, label, target_c, log):
     if log:
         ax.set_yscale('log')
 
-# How many galaxies per civ for various powers of N?
-#Also, there are now 2E6 galaxies/GLyr^3
-#(Conselice et al. 2019). Thus model box has G = 2E6*(13.8/τ) 3 galaxies. If s&lt;c, then G is (c/s) 3
-#times larger.
-#for (c,n),(CIVS,YEARS) in DATA.items():
-#    T50 = np.median([float(row['OriginTime']) for row in CIVS])
-#    G = 2e6*pow(13.8/T50, 3)*pow(c/s, 3) / len(CIVS)
-#    print(n,G)
+# How many galaxies per civ for various powers of N? Data for figure 12
+# There are now 2E6 galaxies/GLyr^3 (Conselice et al. 2019).
+# Thus model box has G = 2E6*(13.8/τ)**3*(c/s)**3 galaxies.
+if args.figure_12:
+    for (c,n),(CIVS,YEARS) in DATA.items():
+        T50 = np.median([float(row['OriginTime']) for row in CIVS])
+        G = 2e6*pow(13.8/T50, 3)*pow(c/s, 3) / len(CIVS)
+        print(n,G)
 
 # Make graphs
 fig, p = plt.subplots(4,len(cs)+1,constrained_layout=True,figsize=(18,12))
