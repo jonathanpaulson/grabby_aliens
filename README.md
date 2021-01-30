@@ -1,6 +1,7 @@
 There are two files: analyze.py and simulate.cc. You are intended to run analyze.py, which compiles and runs simulate.cc itself.
 
-Inputs: analyze.py takes the following arguments<br>
+# Inputs
+analyze.py takes the following arguments<br>
 --n The power in the origin-time power-law. You may pass a comma-separated list of values<br>
 --N The number of potential civilizations.<br>
 --c The speed of light. You may pass a comma-separated list of values.<br>
@@ -11,7 +12,10 @@ Inputs: analyze.py takes the following arguments<br>
 --seed A random seed (default 0)<br>
 --empty_samples How precisely to estimate how full the universe is (default 0, meaning no estimate at all)<br>
 
-Outputs: analyze.py will produce two output files, one ending in "civs.csv" and one ending in "years.csv".
+# Outputs
+Each run of simulate.cc will produce two output files, one ending in "civs.csv" and one ending in "years.csv"<br>
+analyze.py will run simulate.cc once for each combination of parameters you give it. For instance, if you give "--n 10,12" and "--c 1.0,2.0",
+then simulate.cc will run four times: once with n=10,c=1.0, once with n=10,c=2.0, once with n=12,c=1.0 and once with n=12,c=2.0
 
 The "civs" file contains the following columns, with one row per "surviving" civilization:<br>
 - D columns (X,Y,Z) for the position in space<br>
