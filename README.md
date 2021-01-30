@@ -4,7 +4,7 @@ There are two files: analyze.py and simulate.cc. You are intended to run analyze
 analyze.py takes the following arguments<br>
 --n The power in the origin-time power-law. You may pass a comma-separated list of values<br>
 --N The number of potential civilizations.<br>
---c The speed of light. You may pass a comma-separated list of values.<br>
+--sc The ratio s/c - how fast civs expand relative to the speed of light. You may pass a comma-separated list of values.<br>
 --s The speed of civilization expansion (default 1.0)<br>
 --m The power in the universe expansion scale factor (default 2/3; see section "8 Cosmology")<br>
 --D The dimensions of space. Should be 1,2 or 3 (default 3)<br>
