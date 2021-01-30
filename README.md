@@ -1,5 +1,8 @@
 There are two files: analyze.py and simulate.cc. You are intended to run analyze.py, which compiles and runs simulate.cc itself.
 
+# Dependencies
+You will need python3 and g++. I am using "Python 3.6.9" and "g++ (Ubuntu 7.5.0-3ubuntu1~18.04) 7.5.0", although any recent version should work.
+
 # Inputs
 analyze.py takes the following arguments<br>
 --n The power in the origin-time power-law. You may pass a comma-separated list of values<br>

@@ -9,15 +9,15 @@ import subprocess
 import math
 
 parser = argparse.ArgumentParser(description='Run Grabby Aliens model')
-parser.add_argument('--D', type=int, help='Dimensions of space')
-parser.add_argument('--n', type=str, help='Origin time power-law; can pass multiple comma-separated values')
+parser.add_argument('--n', type=str, help='The power in the origin-time power-law. You may pass a comma-separated list of values')
 parser.add_argument('--N', type=str, help='Number of potential civilizations')
-parser.add_argument('--sc', type=str, default='1.0', help='The speed of light')
-parser.add_argument('--L', type=float, default=1.0, help='The size of the universe')
-parser.add_argument('--s', type=float, default=1.0, help='The speed of civ expansion')
-parser.add_argument('--m', type=float, default=2.0/3.0, help='Scale factor power')
-parser.add_argument('--seed', type=float, default=0, help='A random seed')
-parser.add_argument('--empty_samples', type=int, default=0, help='How many points to sample when estimating how full the universe is')
+parser.add_argument('--sc', type=str, help='The ratio s/c - how fast civs expand relative to the speed of light. You may pass a comma-separated list of values.')
+parser.add_argument('--s', type=float, default=1.0, help='The speed of civilization expansion (default 1.0)')
+parser.add_argument('--m', type=float, default=2.0/3.0, help='The power in the universe expansion scale factor (default 2/3; see section "8 Cosmology")')
+parser.add_argument('--D', type=int, default=3, help='Number of spatial dimensions. Should be 1,2 or 3 (default 3)')
+parser.add_argument('--L', type=float, default=1.0, help='The size of the universe (default 1.0)')
+parser.add_argument('--seed', type=float, default=0, help='A random seed (default 0)')
+parser.add_argument('--empty_samples', type=int, default=0, help='How precisely to estimate how full the universe is (default 0, meaning no estimate at all)')
 
 args = parser.parse_args()
 D,ns,N,s,m,sc,L,seed,empty_samples = args.D,args.n,int(float(args.N)),float(args.s),args.m,args.sc,args.L,args.seed,args.empty_samples
@@ -26,7 +26,6 @@ cs = [s/float(sc_ratio) for sc_ratio in sc.split(',')]
 ns = [float(n) for n in ns.split(',')]
 
 DATA = {}
-#for c,n in zip(cs,ns):
 for c in cs:
     for n in ns:
         proper_n = (n+1)/3
@@ -117,13 +116,14 @@ def plot(ax, label, target_c, log):
     if log:
         ax.set_yscale('log')
 
+# How many galaxies per civ for various powers of N?
 #Also, there are now 2E6 galaxies/GLyr^3
 #(Conselice et al. 2019). Thus model box has G = 2E6*(13.8/τ) 3 galaxies. If s&lt;c, then G is (c/s) 3
 #times larger.
-for (c,n),(CIVS,YEARS) in DATA.items():
-    T50 = np.median([float(row['OriginTime']) for row in CIVS])
-    G = 2e6*pow(13.8/T50, 3)*pow(c/s, 3) / len(CIVS)
-    print(n,G)
+#for (c,n),(CIVS,YEARS) in DATA.items():
+#    T50 = np.median([float(row['OriginTime']) for row in CIVS])
+#    G = 2e6*pow(13.8/T50, 3)*pow(c/s, 3) / len(CIVS)
+#    print(n,G)
 
 # Make graphs
 fig, p = plt.subplots(4,len(cs)+1,constrained_layout=True,figsize=(18,12))
@@ -142,6 +142,7 @@ for i,c in enumerate(cs):
                             size='large', ha='center', va='baseline')
     plot(p[0,i+1], 'Origin (Gyr)', c, log=True)
     plot(p[1,i+1], 'MinTillMeet (Gyr)', c, log=True)
+    # Omitted for space
     #plot(p[2,i+1], 'MinSee', c, log=False)
     plot(p[2,i+1], 'MinTillSee (Gyr)', c, log=True)
     plot(p[3,i+1], 'MaxAngle', c, log=False)
