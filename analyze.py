@@ -30,12 +30,12 @@ DATA = {}
 for c in cs:
     for n in ns:
         proper_n = (n+1)/3
-        fname = f'D={D}_n={n}_N={N:.2e}_s={s}_c={c}_L={L}_seed={seed}_empty={empty_samples}_m={m}'
+        fname = os.path.join('data', f'D={D}_n={n}_N={N:.2e}_s={s}_c={c}_L={L}_seed={seed}_empty={empty_samples}_m={m}')
         if os.path.exists(f'{fname}_civs.csv') and os.path.exists(f'{fname}_years.csv'):
-            print(f'Already had data for {fname}_civs.csv and {fname}_years.csv')
+            print(f'Reusing {fname}_civs.csv and {fname}_years.csv')
         else:
             subprocess.check_output(f'g++ -std=c++17 -O3 -Wall -Werror -Wextra -Wshadow -Wno-sign-compare simulate.cc && ./a.out {D} {n} {N} {s} {c} {L} {fname} {seed} {empty_samples} {m}', shell=True)
-            print(f'Generated data in {fname}_civs.csv and {fname}_years.csv')
+            print(f'Generated {fname}_civs.csv and {fname}_years.csv')
 
         # Read CIV data
         with open(f'{fname}_civs.csv') as csvfile:
@@ -91,10 +91,11 @@ def getData(CIVS, YEARS, label):
     return (x,y)
 
 
-#k1 = (2.0, 6.0)
-#k2 = (4.0/3.0, 12.0)
-#print('Name,p1,p25,p75,p1,p25,p75')
-#for label in getLabels():
+# Table 1
+# k1 = (2.0, 6.0)
+# k2 = (4.0/3.0, 12.0)
+# print('Name,p1,p25,p75,p1,p25,p75')
+# for label in getLabels():
 #    C1,Y1 = DATA[k1]
 #    C2,Y2 = DATA[k2]
 #    x1,y1 = getData(C1, Y1, label)
@@ -111,7 +112,6 @@ def plot(ax, label, target_c, log):
             continue
         x,y = getData(CIVS, YEARS, label)
         ax.plot(x, y, label=f'n={n}')
-    #ax.legend(loc='lower right')
 
     ax.set_ylabel(label)
     if log:
@@ -145,7 +145,6 @@ for i,c in enumerate(cs):
     #plot(p[2,i+1], 'MinSee', c, log=False)
     plot(p[2,i+1], 'MinTillSee (Gyr)', c, log=True)
     plot(p[3,i+1], 'MaxAngle', c, log=False)
-plt.legend(bbox_to_anchor=(3, 0), loc='upper right', borderaxespad=0.)
 
 plt.savefig(f'{fname}.png')
 # Open PNG in windows
