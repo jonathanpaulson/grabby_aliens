@@ -31,6 +31,8 @@ The "years" file contains the following columns, all in "clock" years:<br>
 - MinWait: Sampled distribution of how long civilizations will have to wait to meet another civilization<br>
 - MinSETI: Sampled distribution of how long civilizations will have to wait to see signals from another civilization<br>
 
+analyze.py will combine statistics from these simulations into a graph, with different values of "n" as different datasets and different values of "c" as columns of graphs.
+
 For example, you can use the following command to generate figure 13:
 `
 time python3 analyze.py --D 3 --n 4.5,8,15,35 --N 1e8 --c 1.0,0.75,0.5,0.25 --L 1 --s 1 --seed 0 --empty 100 --m 0.66666666666666666666666
