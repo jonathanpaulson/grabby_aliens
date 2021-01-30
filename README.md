@@ -36,13 +36,17 @@ The "years" file contains the following columns, all in "clock" years:<br>
 
 analyze.py will combine statistics from these simulations into a graph, with different values of "n" as different datasets and different values of "c" as columns of graphs.
 
-For example, you can use the following command to generate figure 13:
-`
-time python3 analyze.py --D 3 --n 4.5,8,15,35 --N 1e8 --c 1.0,0.75,0.5,0.25 --L 1 --s 1 --seed 0 --empty 100 --m 0.66666666666666666666666
-`
+# Examples
+To generate figure 13:
+`time python3 analyze.py --D 3 --n 4.5,8,15,35 --N 1e8 --c 1.0,0.75,0.5,0.25 --L 1 --s 1 --seed 0 --empty 100 --m 0.66666666666666666666666`
 
-`time python3 analyze.py --D 3 --n 5 --N 1e8 --c 1.25 --L 1 --s 1 --seed 0 --empty 100`
+To generate table 1:
+`time python3 analyze.py --D 3 --n 17,35 --N 1e8 --sc 0.5,0.75 --L 1 --s 1 --seed 0 --empty 100 --m 0.66666666666666666666666 --table_1`
 
+To generate data for figure 12:
+`time python3 analyze.py --D 3 --n 4.5,8,15,35 --N 1e8 --sc 1.0,0.75,0.5,0.25 --L 1 --s 1 --seed 0 --empty 100 --m 0.66666666666666666666666 --figure_12`
+
+Help:
 `python3 analyze.py --help`
 
 # Miscellaneous
