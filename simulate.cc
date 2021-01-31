@@ -60,12 +60,13 @@ struct Civ {
   ll nsee = 0; // number of other civs whose signals we see at our origin time
   ld max_angle = 0.0; // max "angle" among civs we see at our origin time
   ld percent_empty = 0.0; // how much of the universe is empty at our origin time
+  ld volume = 0.0; // Fraction of the universe controlled by this civ at the end of time
 };
 ostream& operator<<(ostream& o, const Civ& C) {
   for(ll i=0; i<C.V.size(); i++) {
     o << C.V[i] << ",";
   }
-  o << C.T << "," << C.min_arrival << "," << C.min_see << "," << C.nsee << "," << C.max_angle << "," << C.percent_empty;
+  o << C.T << "," << C.min_arrival << "," << C.min_see << "," << C.nsee << "," << C.max_angle << "," << C.percent_empty << "," << C.volume;
   return o;
 }
 
@@ -170,7 +171,7 @@ vector<tuple<ld,ld,ld>> to_years(const vector<Civ>& C, ld m) {
   return ANS;
 }
 
-vector<Civ> simulate(ll D, ld speed, ld n, ll N, ld c, ld L, ll empty_samples) {
+vector<Civ> simulate(ll D, ld speed, ld n, ll N, ld c, ld L, ll empty_samples, ll volume_samples) {
   /* This is a simpler way of generating the candidate civs.
      Instead, I generate them one-by-one by generating the origin times already in sorted
      order (see SortedRNG for more details on this).
@@ -230,7 +231,7 @@ vector<Civ> simulate(ll D, ld speed, ld n, ll N, ld c, ld L, ll empty_samples) {
         cand.percent_empty = static_cast<ld>(nalive)/static_cast<ld>(empty_samples);
       }
 
-      cerr << "i=" << i << " |C|=" << ALIVE.size() << " percent_empty=" << cand.percent_empty << endl;
+      cerr << "i=" << i << " |C|=" << ALIVE.size() << " percent_empty=" << cand.percent_empty << " n=" << n << endl;
       ALIVE.push_back(cand);
       last_alive = i;
     }
@@ -268,11 +269,25 @@ vector<Civ> simulate(ll D, ld speed, ld n, ll N, ld c, ld L, ll empty_samples) {
     assert(c1.min_arrival < 1e6);
     assert(c1.min_see < 1e6);
   }
+
+  for(ll t=0; t<volume_samples; t++) {
+    vector<ld> PT = Civ::random_point(D, L);
+    pair<ld,ld> best = make_pair(1e9, 0);
+    for(ll i=0; i<ALIVE.size(); i++) {
+      auto& c1 = ALIVE[i];
+      ld di = distance(c1.V, PT, L);
+      ld ti = (c1.T + di/speed);
+      if(ti < best.first) {
+        best = make_pair(ti, i);
+      }
+    }
+    ALIVE[best.second].volume += 1.0/volume_samples;
+  }
   return ALIVE;
 }
 
 int main(int, char** argv) {
-  ll D = stoll(argv[1]);
+ll D = stoll(argv[1]);
   ld n = atof(argv[2]);
   ll N = stoll(argv[3]);
   ld speed = atof(argv[4]);
@@ -282,17 +297,18 @@ int main(int, char** argv) {
   ll seed = stoll(argv[8]);
   ll empty_samples = stoll(argv[9]);
   ld m = atof(argv[10]);
+  ll volume_samples = stoll(argv[11]);
 
   RNG.seed(seed);
 
   cerr << "D=" << D << " n=" << n << " N=" << N << " speed=" << speed << " c=" << c << " L=" << L << endl;
 
-  vector<Civ> CIVS = simulate(D, speed, n, N, c, L, empty_samples);
+  vector<Civ> CIVS = simulate(D, speed, n, N, c, L, empty_samples, volume_samples);
   std::ofstream civ_out (fname+"_civs.csv", std::ofstream::out);
   for(ll i=0; i<D; i++) {
     civ_out << static_cast<char>('X'+i) << ",";
   }
-  civ_out << "OriginTime,MinArrival,MinSee,NumberSeen,MaxAngle,PctEmpty" << endl;
+  civ_out << "OriginTime,MinArrival,MinSee,NumberSeen,MaxAngle,PctEmpty,Volume" << endl;
   for(auto& civ : CIVS) {
     civ_out << civ << endl;
   }
