@@ -22,7 +22,7 @@ parser.add_argument('--table_1', action='store_true')
 parser.add_argument('--figure_12', action='store_true')
 
 args = parser.parse_args()
-D,ns,N,s,m,sc,L,seed,empty_samples = args.D,args.n,int(float(args.N)),float(args.s),args.m,args.sc,args.L,args.seed,args.empty_samples
+D,ns,N,s,m,sc,L,seed,empty_samples = args.D,args.n,int(float(args.N)),float(args.s),float(args.m),args.sc,args.L,args.seed,args.empty_samples
 
 cs = [s/float(sc_ratio) for sc_ratio in sc.split(',')]
 ns = [float(n) for n in ns.split(',')]
@@ -30,12 +30,12 @@ ns = [float(n) for n in ns.split(',')]
 DATA = {}
 for c in cs:
     for n in ns:
-        proper_n = (n+1)/3
+        code_n = (n / (1.0-m)) - 1.0
         fname = os.path.join('data', f'D={D}_n={n}_N={N:.2e}_s={s}_c={c}_L={L}_seed={seed}_empty={empty_samples}_m={m}')
         if os.path.exists(f'{fname}_civs.csv') and os.path.exists(f'{fname}_years.csv'):
             print(f'Reusing {fname}_civs.csv and {fname}_years.csv')
         else:
-            subprocess.check_output(f'g++ -std=c++17 -O3 -Wall -Werror -Wextra -Wshadow -Wno-sign-compare simulate.cc && ./a.out {D} {n} {N} {s} {c} {L} {fname} {seed} {empty_samples} {m}', shell=True)
+            subprocess.check_output(f'g++ -std=c++17 -O3 -Wall -Werror -Wextra -Wshadow -Wno-sign-compare simulate.cc && ./a.out {D} {code_n} {N} {s} {c} {L} {fname} {seed} {empty_samples} {m}', shell=True)
             print(f'Generated {fname}_civs.csv and {fname}_years.csv')
 
         # Read CIV data
@@ -46,7 +46,7 @@ for c in cs:
         with open(f'{fname}_years.csv') as yearfile:
             YEARS = list(csv.DictReader(yearfile))
 
-        DATA[(c,proper_n)] = (CIVS, YEARS)
+        DATA[(c,n)] = (CIVS, YEARS)
 
 
 C = ','.join([str(len(CIVS)) for (CIVS,YEARS) in DATA.values()])
