@@ -17,12 +17,13 @@ using ld = long double;
 
 std::minstd_rand RNG(0);
 uniform_real_distribution<ld> DIST(0.0, 1.0);
+// Samples from Uniform(0,1)
 ld r01() {
   return DIST(RNG);
 }
 
 // https://apps.dtic.mil/dtic/tr/fulltext/u2/a066739.pdf
-// Samples from a sorted list of N U(0,1) variables
+// Samples from a sorted list of N Uniform(0,1) variables
 struct SortedRNG {
   SortedRNG(ll N) : I(N), LnCurMax(0.0) {}
   ld next() {
@@ -35,9 +36,11 @@ struct SortedRNG {
   ld LnCurMax = 0.0;
 };
 
+// Information about a single surviving civilization
 struct Civ {
   Civ(ll D) : V(D, 0.0), T(0.0) {}
 
+  // Return a random point in [0,L]^D
   static vector<ld> random_point(ll D, ld L) {
     vector<ld> R(D, 0.0);
     for(ll i=0; i<D; i++) {
@@ -45,6 +48,7 @@ struct Civ {
     }
     return R;
   }
+  // Generate the next random civilization
   static Civ mk_random(ll D, ld power, ld L, SortedRNG& R) {
     Civ ret(D);
     ret.V = random_point(D, L);
@@ -58,7 +62,7 @@ struct Civ {
   ld min_arrival = 1e9; // min time when another civ arrives at our origin
   ld min_see = 1e9; // min time when we see signals from another civ
   ll nsee = 0; // number of other civs whose signals we see at our origin time
-  ld max_angle = 0.0; // max "angle" among civs we see at our origin time
+  ld max_angle = 0.0; // max angle among civs we see at our origin time
   ld percent_empty = 0.0; // how much of the universe is empty at our origin time
   ld volume = 0.0; // Fraction of the universe controlled by this civ at the end of time
 };
@@ -87,6 +91,10 @@ ld distance(const vector<ld>& A, const vector<ld>& B, ld L) {
 }
 ld sq(ld x) { return x*x; }
 
+// Consider the sorted list {13.787*n/d} where n is drawn from NUM and d is drawn from DEN
+// Return |NUM| evenly-spaced elements from that list.
+// This is used to convert model time into Gyr, where DEN are the candidate origin times
+// for Earth, and NUM is some statistic of interest in units of model time
 vector<ld> ratio_distribution(const vector<ld>& NUM, const vector<ld>& DEN) {
   assert(NUM.size() > 0);
   assert(DEN.size() > 0);
@@ -132,6 +140,9 @@ vector<ld> ratio_distribution(const vector<ld>& NUM, const vector<ld>& DEN) {
   return ANS;
 }
 
+// Generates "years" statistics
+// |C| is the list of surviving civilizations
+// m is the power in the scale factor (see "Cosmology" section of paper)
 vector<tuple<ld,ld,ld>> to_years(const vector<Civ>& C, ld m) {
   for(ll i=0; i+1<C.size(); i++) {
     assert(C[i].T < C[i+1].T);
@@ -172,7 +183,7 @@ vector<tuple<ld,ld,ld>> to_years(const vector<Civ>& C, ld m) {
 }
 
 vector<Civ> simulate(ll D, ld speed, ld n, ll N, ld c, ld L, ll empty_samples, ll volume_samples) {
-  /* This is a simpler way of generating the candidate civs.
+  /* This is a simpler way of generating the candidate civs, but it is slower and memory-hungry.
      Instead, I generate them one-by-one by generating the origin times already in sorted
      order (see SortedRNG for more details on this).
 
@@ -275,6 +286,9 @@ vector<Civ> simulate(ll D, ld speed, ld n, ll N, ld c, ld L, ll empty_samples, l
     pair<ld,ld> best = make_pair(1e9, 0);
     for(ll i=0; i<ALIVE.size(); i++) {
       auto& c1 = ALIVE[i];
+      // Someone got it to before we were even born;
+      // ALIVE is sorted by OriginTime (.T)
+      if(best.first < c1.T) { break; }
       ld di = distance(c1.V, PT, L);
       ld ti = (c1.T + di/speed);
       if(ti < best.first) {
@@ -303,7 +317,10 @@ ll D = stoll(argv[1]);
 
   cerr << "D=" << D << " n=" << n << " N=" << N << " speed=" << speed << " c=" << c << " L=" << L << endl;
 
+  // Compute the surviving civs
   vector<Civ> CIVS = simulate(D, speed, n, N, c, L, empty_samples, volume_samples);
+
+  // Write "civs" output file
   std::ofstream civ_out (fname+"_civs.csv", std::ofstream::out);
   for(ll i=0; i<D; i++) {
     civ_out << static_cast<char>('X'+i) << ",";
@@ -314,6 +331,7 @@ ll D = stoll(argv[1]);
   }
   civ_out.close();
 
+  // Compute + write "years" output file
   vector<tuple<ld,ld,ld>> years = to_years(CIVS, m);
   std::ofstream year_out (fname+"_years.csv", std::ofstream::out);
   year_out << "OriginTime,MinWait,MinSETI" << endl;

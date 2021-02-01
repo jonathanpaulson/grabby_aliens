@@ -19,8 +19,8 @@ parser.add_argument('--L', type=float, default=1.0, help='The size of the univer
 parser.add_argument('--seed', type=float, default=0, help='A random seed (default 0)')
 parser.add_argument('--empty_samples', type=int, default=0, help='How precisely to estimate how full the universe is (default 0, meaning no estimate at all)')
 parser.add_argument('--volume_samples', type=float, default=0, help='How precisely to estimate volume (default 0, meaning no estimate at all)')
-parser.add_argument('--table_1', action='store_true')
-parser.add_argument('--figure_12', action='store_true')
+parser.add_argument('--table_1', action='store_true', help='Print a table of statistics. Run with --n 6,12 and --sc 0.5,0.75')
+parser.add_argument('--figure_12', action='store_true', help='Print the average number of galaxies each surviving civilization occupies')
 
 args = parser.parse_args()
 D,ns,N,s,m,sc,L,seed,empty_samples,volume_samples = args.D,args.n,int(float(args.N)),float(args.s),float(args.m),args.sc,args.L,args.seed,args.empty_samples,int(float(args.volume_samples))
