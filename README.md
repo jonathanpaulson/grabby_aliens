@@ -28,6 +28,7 @@ The "civs" file contains the following columns, with one row per "surviving" civ
 - NumberSeen: The number of alien civilizations we see signals from at our origin time<br>
 - MaxAngle: How much of the sky another civilization takes up in our sky at our origin time (section 10 H; between 0 and pi)<br>
 - PctEmpty: An estimate of how much of the universe is empty at our origin time<br>
+- Volume: An estimate of what fraction of the universe this civ eventually controls<br>
 
 The "years" file contains the following columns, all in "clock" years:<br>
 - OriginTime: Sampled distribution of civilization origin times<br>
