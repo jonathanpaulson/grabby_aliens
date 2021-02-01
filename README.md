@@ -49,3 +49,5 @@ To generate data for figure 12:
 
 Help:
 `python3 analyze.py --help`
+
+You can reach me at jonathanpaulson@gmail.com
