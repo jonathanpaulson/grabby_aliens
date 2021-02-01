@@ -38,16 +38,13 @@ analyze.py will combine statistics from these simulations into a graph, with dif
 
 # Examples
 To generate figure 13:
-`time python3 analyze.py --D 3 --n 1.5,3,6,12 --N 1e8 --sc 1.0,0.75,0.5,0.25 --L 1 --s 1 --seed 0 --empty 100 --m 0.66666666666`
+`time python3 analyze.py --D 3 --n 1.5,3,6,12 --N 1e8 --sc 1.0,0.75,0.5,0.25 --L 1 --s 1 --seed 0 --empty 100`
 
 To generate table 1:
-`time python3 analyze.py --D 3 --n 6,12 --N 1e8 --sc 0.5,0.75 --L 1 --s 1 --seed 0 --empty 100 --m 0.66666666666666666666666 --table_1`
+`time python3 analyze.py --D 3 --n 6,12 --N 1e8 --sc 0.5,0.75 --L 1 --s 1 --seed 0 --empty 100 --table_1`
 
 To generate data for figure 12:
-`time python3 analyze.py --D 3 --n 1.5,3,6,12 --N 1e8 --sc 1.0 --L 1 --s 1 --seed 0 --m 0.66666666666666666666666 --figure_12`
+`time python3 analyze.py --D 3 --n 1.5,3,6,12 --N 1e8 --sc 1.0 --L 1 --s 1 --seed 0 --figure_12`
 
 Help:
 `python3 analyze.py --help`
-
-# Miscellaneous
-analyze.py has commented-out code to generate table 1 and the data for figure 12
