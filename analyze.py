@@ -138,10 +138,19 @@ fig, p = plt.subplots(4,len(cs)+1,constrained_layout=True,figsize=(18,12))
 
 plot(p[0,0], 'Origin', cs[0], log=False)
 plot(p[1,0], 'MinArrival', cs[0], log=False)
-plot(p[2,0], 'Volume', cs[0], log=True)
-if empty_samples:
+
+# Optionally plot Volume and % Empty
+if volume_samples and empty_samples:
+    plot(p[2,0], 'Volume', cs[0], log=True)
     plot(p[3,0], '% Empty', cs[0], log=False)
+elif volume_samples:
+    plot(p[2,0], 'Volume', cs[0], log=True)
+    fig.delaxes(p[3,0])
+elif empty_samples:
+    plot(p[2,0], '% Empty', cs[0], log=False)
+    fig.delaxes(p[3,0])
 else:
+    fig.delaxes(p[2,0])
     fig.delaxes(p[3,0])
 
 for i,c in enumerate(cs):
