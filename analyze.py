@@ -18,12 +18,13 @@ parser.add_argument('--D', type=int, default=3, help='Number of spatial dimensio
 parser.add_argument('--L', type=float, default=1.0, help='The size of the universe (default 1.0)')
 parser.add_argument('--seed', type=float, default=0, help='A random seed (default 0)')
 parser.add_argument('--empty_samples', type=int, default=0, help='How precisely to estimate how full the universe is (default 0, meaning no estimate at all)')
-parser.add_argument('--volume_samples', type=float, default=0, help='How precisely to estimate volume (default 0, meaning no estimate at all)')
+parser.add_argument('--volume_points', type=str, default=0, help='How precisely to estimate volume (default 0, meaning no estimate at all)')
+parser.add_argument('--volume_radii', type=str, default=0, help='How precisely to estimate volume (default 0, meaning no estimate at all)')
 parser.add_argument('--table_1', action='store_true', help='Print a table of statistics. Run with --n 6,12 and --sc 0.5,0.75')
 parser.add_argument('--figure_12', action='store_true', help='Print the average number of galaxies each surviving civilization occupies')
 
 args = parser.parse_args()
-D,ns,N,s,m,sc,L,seed,empty_samples,volume_samples = args.D,args.n,int(float(args.N)),float(args.s),float(args.m),args.sc,args.L,args.seed,args.empty_samples,int(float(args.volume_samples))
+D,ns,N,s,m,sc,L,seed,empty_samples,volume_points,volume_radii = args.D,args.n,int(float(args.N)),float(args.s),float(args.m),args.sc,args.L,args.seed,args.empty_samples,int(float(args.volume_points)),int(float(args.volume_radii))
 
 cs = [s/float(sc_ratio) for sc_ratio in sc.split(',')]
 ns = [float(n) for n in ns.split(',')]
@@ -32,11 +33,13 @@ DATA = {}
 for c in cs:
     for n in ns:
         code_n = (n / (1.0-m)) - 1.0
-        fname = os.path.join('data', f'D={D}_n={n}_N={N:.2e}_s={s}_c={c}_L={L}_m={m}_seed={seed}_empty={empty_samples}_volume={volume_samples}')
+        fname = os.path.join('data', f'D={D}_n={n}_N={N:.2e}_s={s}_c={c}_L={L}_m={m}_seed={seed}_empty={empty_samples}_volume_points={volume_points}_volume_radii={volume_radii}')
         if os.path.exists(f'{fname}_civs.csv') and os.path.exists(f'{fname}_years.csv'):
             print(f'Reusing {fname}_civs.csv and {fname}_years.csv')
         else:
-            subprocess.check_output(f'g++ -std=c++17 -O3 -Wall -Werror -Wextra -Wshadow -Wno-sign-compare simulate.cc && ./a.out {D} {code_n} {N} {s} {c} {L} {fname} {seed} {empty_samples} {m} {volume_samples}', shell=True)
+            cmd = f'g++ -std=c++17 -O3 -Wall -Werror -Wextra -Wshadow -Wno-sign-compare simulate.cc && ./a.out {D} {code_n} {N} {s} {c} {L} {fname} {seed} {empty_samples} {m} {volume_points} {volume_radii} 2>{fname}.out'
+            print(cmd)
+            subprocess.check_output(cmd, shell=True)
             print(f'Generated {fname}_civs.csv and {fname}_years.csv')
 
         # Read CIV data
@@ -57,7 +60,7 @@ c_str = ','.join([str(c) for c,n in DATA.keys()])
 def getLabels():
     return ['Origin', 'MinArrival', 'MinSee',
             'Origin (Gyr)', 'MinTillMeet (Gyr)', 'MinTillSee (Gyr)',
-            'MaxAngle', '% Empty']
+            'MaxAngle', '% Empty', 'Volume (Points)', 'Volume (Radii)']
 
 def getData(CIVS, YEARS, label):
     civs_x = [float(i)/len(CIVS) for i in range(len(CIVS))]
@@ -88,10 +91,14 @@ def getData(CIVS, YEARS, label):
     elif label == '% Empty':
         x = civs_x
         y = list(reversed(sorted([float(row['PctEmpty']) for row in CIVS])))
-    elif label == 'Volume':
+    elif label == 'Volume (Points)':
         GALAXIES_IN_UNIVERSE = 2e6*pow(13.8/T50, 3)*pow(c/s, 3) / len(CIVS)
         x = civs_x
-        y = sorted([float(row['Volume'])*GALAXIES_IN_UNIVERSE for row in CIVS])
+        y = sorted([float(row['VolumePoints'])*GALAXIES_IN_UNIVERSE for row in CIVS])
+    elif label == 'Volume (Radii)':
+        GALAXIES_IN_UNIVERSE = 2e6*pow(13.8/T50, 3)*pow(c/s, 3) / len(CIVS)
+        x = civs_x
+        y = sorted([float(row['VolumeRadii'])*GALAXIES_IN_UNIVERSE for row in CIVS])
     else:
         assert False, f'Unknown label={label}'
     return (x,y)
@@ -99,7 +106,7 @@ def getData(CIVS, YEARS, label):
 
 if args.table_1:
     # Table 1
-    k1 = (2.0, 6.0)
+    k1 = (1.0, 6.0)
     k2 = (4.0/3.0, 12.0)
     print('Name,p1,p25,p75,p1,p25,p75')
     for label in getLabels():
@@ -139,12 +146,21 @@ fig, p = plt.subplots(4,len(cs)+1,constrained_layout=True,figsize=(18,12))
 plot(p[0,0], 'Origin', cs[0], log=False)
 plot(p[1,0], 'MinArrival', cs[0], log=False)
 
+has_volume = volume_points or volume_radii
+
 # Optionally plot Volume and % Empty
-if volume_samples and empty_samples:
-    plot(p[2,0], 'Volume', cs[0], log=True)
+if has_volume and empty_samples:
+    if volume_points:
+        plot(p[2,0], 'Volume (Points)', cs[0], log=True)
+    if volume_radii:
+        plot(p[2,0], 'Volume (Radii)', cs[0], log=True)
     plot(p[3,0], '% Empty', cs[0], log=False)
-elif volume_samples:
-    plot(p[2,0], 'Volume', cs[0], log=True)
+elif has_volume:
+    if volume_points:
+        plot(p[2,0], 'Volume (Points)', cs[0], log=True)
+    if volume_radii:
+        plot(p[2,0], 'Volume (Radii)', cs[0], log=True)
+    plot(p[3,0], '% Empty', cs[0], log=False)
     fig.delaxes(p[3,0])
 elif empty_samples:
     plot(p[2,0], '% Empty', cs[0], log=False)

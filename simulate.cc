@@ -21,6 +21,21 @@ uniform_real_distribution<ld> DIST(0.0, 1.0);
 ld r01() {
   return DIST(RNG);
 }
+ld r(ld lo, ld hi) {
+  return uniform_real_distribution<ld>(lo,hi)(RNG);
+}
+
+ostream& operator<<(ostream& o, const vector<ld>& A) {
+  o << "[";
+  for(ll i=0; i<A.size(); i++) {
+    o << A[i];
+    if(i+1<A.size()) {
+      o << " ";
+    }
+  }
+  o << "]";
+  return o;
+}
 
 // https://apps.dtic.mil/dtic/tr/fulltext/u2/a066739.pdf
 // Samples from a sorted list of N Uniform(0,1) variables
@@ -64,13 +79,14 @@ struct Civ {
   ll nsee = 0; // number of other civs whose signals we see at our origin time
   ld max_angle = 0.0; // max angle among civs we see at our origin time
   ld percent_empty = 0.0; // how much of the universe is empty at our origin time
-  ld volume = 0.0; // Fraction of the universe controlled by this civ at the end of time
+  ld volume_points = 0.0; // Fraction of the universe controlled by this civ at the end of time
+  ld volume_radii = 0.0;
 };
 ostream& operator<<(ostream& o, const Civ& C) {
   for(ll i=0; i<C.V.size(); i++) {
     o << C.V[i] << ",";
   }
-  o << C.T << "," << C.min_arrival << "," << C.min_see << "," << C.nsee << "," << C.max_angle << "," << C.percent_empty << "," << C.volume;
+  o << C.T << "," << C.min_arrival << "," << C.min_see << "," << C.nsee << "," << C.max_angle << "," << C.percent_empty << "," << C.volume_points << "," << C.volume_radii;
   return o;
 }
 
@@ -182,7 +198,36 @@ vector<tuple<ld,ld,ld>> to_years(const vector<Civ>& C, ld m) {
   return ANS;
 }
 
-vector<Civ> simulate(ll D, ld speed, ld n, ll N, ld c, ld L, ll empty_samples, ll volume_samples) {
+vector<ld> add(const vector<ld>& A, const vector<ld>& B) {
+  vector<ld> C(A.size(), 0.0);
+  for(ll i=0; i<A.size(); i++) {
+    C[i] = A[i]+B[i];
+  }
+  return C;
+}
+vector<ld> scale(const vector<ld>& A, ld by) {
+  vector<ld> B(A.size(), 0.0);
+  for(ll i=0; i<B.size(); i++) {
+    B[i] = A[i]*by;
+  }
+  return B;
+}
+vector<ld> random_direction(ll D) {
+  // Return a random unit vector
+  while(true) {
+    vector<ld> d(D, 0.0);
+    ld d2 = 0.0;
+    for(ll i=0; i<D; i++) {
+      d[i] = r(-1, 1);
+      d2 += d[i]*d[i];
+    }
+    if(d2 <= 1.0) {
+      return scale(d, 1.0/sqrt(d2));
+    }
+  }
+}
+
+vector<Civ> simulate(ll D, ld speed, ld n, ll N, ld c, ld L, ll empty_samples, ll volume_points, ll volume_radii) {
   /* This is a simpler way of generating the candidate civs, but it is slower and memory-hungry.
      Instead, I generate them one-by-one by generating the origin times already in sorted
      order (see SortedRNG for more details on this).
@@ -281,7 +326,7 @@ vector<Civ> simulate(ll D, ld speed, ld n, ll N, ld c, ld L, ll empty_samples, l
     assert(c1.min_see < 1e6);
   }
 
-  for(ll t=0; t<volume_samples; t++) {
+  for(ll t=0; t<volume_points; t++) {
     vector<ld> PT = Civ::random_point(D, L);
     pair<ld,ld> best = make_pair(1e9, 0);
     for(ll i=0; i<ALIVE.size(); i++) {
@@ -295,13 +340,59 @@ vector<Civ> simulate(ll D, ld speed, ld n, ll N, ld c, ld L, ll empty_samples, l
         best = make_pair(ti, i);
       }
     }
-    ALIVE[best.second].volume += 1.0/volume_samples;
+    ALIVE[best.second].volume_points += 1.0/volume_points;
+  }
+
+  for(ll i=0; i<ALIVE.size(); i++) {
+    auto& c1 = ALIVE[i];
+    ld sum_rad_cubed = 0.0;
+    for(ll t=0; t<volume_radii; t++) {
+      vector<ld> d = random_direction(D);
+      ld lo = 0.0;
+      ld hi = 10.0*L;
+      while(lo*(1+1e-6) < hi) {
+        ld mid = (lo+hi)/2.0;
+        vector<ld> P = add(c1.V, scale(d, mid));
+
+        ld d1 = distance(c1.V, P, L);
+        ld t1 = c1.T + d1/speed;
+        bool ok = true;
+        for(ll j=0; j<D; j++) {
+          if(P[j]<0.0 || P[j]>L) { // outside universe
+            ok = false;
+          }
+        }
+
+        if(ok) {
+          for(ll j=0; j<ALIVE.size(); j++) {
+            if(t1 < ALIVE[j].T) { break; }
+            ld dj = distance(ALIVE[j].V, P, L);
+            ld tj = ALIVE[j].T + dj/speed;
+            if(tj < t1) {
+              ok = false;
+              break;
+            }
+          }
+        }
+        if(ok) {
+          lo = mid;
+        } else {
+          hi = mid;
+        }
+      }
+
+      assert(D==3);
+      ld final_rad = (lo+hi)/2.0;
+      sum_rad_cubed += pow(final_rad, 3.0);
+    }
+    c1.volume_radii = 4.0/3.0*M_PI*sum_rad_cubed / static_cast<ld>(volume_radii);
+    cerr << "volume i=" << i << " ALIVE.size=" << ALIVE.size() << " volume_points=" << c1.volume_points << " volume_radii=" << c1.volume_radii << endl;
   }
   return ALIVE;
 }
 
 int main(int, char** argv) {
-ll D = stoll(argv[1]);
+  ll D = stoll(argv[1]);
   ld n = atof(argv[2]);
   ll N = stoll(argv[3]);
   ld speed = atof(argv[4]);
@@ -311,21 +402,22 @@ ll D = stoll(argv[1]);
   ll seed = stoll(argv[8]);
   ll empty_samples = stoll(argv[9]);
   ld m = atof(argv[10]);
-  ll volume_samples = stoll(argv[11]);
+  ll volume_points = stoll(argv[11]);
+  ll volume_radii = stoll(argv[12]);
 
   RNG.seed(seed);
 
   cerr << "D=" << D << " n=" << n << " N=" << N << " speed=" << speed << " c=" << c << " L=" << L << endl;
 
   // Compute the surviving civs
-  vector<Civ> CIVS = simulate(D, speed, n, N, c, L, empty_samples, volume_samples);
+  vector<Civ> CIVS = simulate(D, speed, n, N, c, L, empty_samples, volume_points, volume_radii);
 
   // Write "civs" output file
   std::ofstream civ_out (fname+"_civs.csv", std::ofstream::out);
   for(ll i=0; i<D; i++) {
     civ_out << static_cast<char>('X'+i) << ",";
   }
-  civ_out << "OriginTime,MinArrival,MinSee,NumberSeen,MaxAngle,PctEmpty,Volume" << endl;
+  civ_out << "OriginTime,MinArrival,MinSee,NumberSeen,MaxAngle,PctEmpty,VolumePoints,VolumeRadii" << endl;
   for(auto& civ : CIVS) {
     civ_out << civ << endl;
   }
