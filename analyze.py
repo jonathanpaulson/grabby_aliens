@@ -92,11 +92,11 @@ def getData(CIVS, YEARS, label):
         x = civs_x
         y = list(reversed(sorted([float(row['PctEmpty']) for row in CIVS])))
     elif label == 'Volume (Points)':
-        GALAXIES_IN_UNIVERSE = 2e6*pow(13.8/T50, 3)*pow(c/s, 3) / len(CIVS)
+        GALAXIES_IN_UNIVERSE = 2e6*pow(13.8/T50, 3)*pow(c/s, 3)
         x = civs_x
         y = sorted([float(row['VolumePoints'])*GALAXIES_IN_UNIVERSE for row in CIVS])
     elif label == 'Volume (Radii)':
-        GALAXIES_IN_UNIVERSE = 2e6*pow(13.8/T50, 3)*pow(c/s, 3) / len(CIVS)
+        GALAXIES_IN_UNIVERSE = 2e6*pow(13.8/T50, 3)*pow(c/s, 3)
         x = civs_x
         y = sorted([float(row['VolumeRadii'])*GALAXIES_IN_UNIVERSE for row in CIVS])
     else:
