@@ -22,6 +22,7 @@ parser.add_argument('--volume_points', type=str, default=0, help='How precisely 
 parser.add_argument('--volume_radii', type=str, default=0, help='How precisely to estimate volume (default 0, meaning no estimate at all)')
 parser.add_argument('--table_1', action='store_true', help='Print a table of statistics. Run with --n 6,12 and --sc 0.5,0.75')
 parser.add_argument('--figure_12', action='store_true', help='Print the average number of galaxies each surviving civilization occupies')
+parser.add_argument('--force', action='store_true', help='Do not reuse data; calculate from scratch')
 
 args = parser.parse_args()
 D,ns,N,s,m,sc,L,seed,empty_samples,volume_points,volume_radii = args.D,args.n,int(float(args.N)),float(args.s),float(args.m),args.sc,args.L,args.seed,args.empty_samples,int(float(args.volume_points)),int(float(args.volume_radii))
@@ -34,7 +35,7 @@ for c in cs:
     for n in ns:
         code_n = (n / (1.0-m)) - 1.0
         fname = os.path.join('data', f'D={D}_n={n}_N={N:.2e}_s={s}_c={c}_L={L}_m={m}_seed={seed}_empty={empty_samples}_volume_points={volume_points}_volume_radii={volume_radii}')
-        if os.path.exists(f'{fname}_civs.csv') and os.path.exists(f'{fname}_years.csv'):
+        if os.path.exists(f'{fname}_civs.csv') and os.path.exists(f'{fname}_years.csv') and not args.force:
             print(f'Reusing {fname}_civs.csv and {fname}_years.csv')
         else:
             cmd = f'g++ -std=c++17 -O3 -Wall -Werror -Wextra -Wshadow -Wno-sign-compare simulate.cc && ./a.out {D} {code_n} {N} {s} {c} {L} {fname} {seed} {empty_samples} {m} {volume_points} {volume_radii} 2>{fname}.out'
@@ -99,6 +100,12 @@ def getData(CIVS, YEARS, label):
         GALAXIES_IN_UNIVERSE = 2e6*pow(13.8/T50, 3)*pow(c/s, 3)
         x = civs_x
         y = sorted([float(row['VolumeRadii'])*GALAXIES_IN_UNIVERSE for row in CIVS])
+    elif label == 'RatioNonGrabby':
+        x = civs_x
+        y = sorted([float(row['RatioNonGrabby']) for row in CIVS])
+    elif label == 'RatioNonGrabbyNow':
+        x = civs_x
+        y = sorted([float(row['RatioNonGrabbyNow']) for row in CIVS])
     else:
         assert False, f'Unknown label={label}'
     return (x,y)
@@ -143,8 +150,10 @@ if args.figure_12:
 # Make graphs
 fig, p = plt.subplots(4,len(cs)+1,constrained_layout=True,figsize=(18,12))
 
-plot(p[0,0], 'Origin', cs[0], log=False)
-plot(p[1,0], 'MinArrival', cs[0], log=False)
+plot(p[0,0], 'RatioNonGrabby', cs[0], log=True)
+plot(p[1,0], 'RatioNonGrabbyNow', cs[0], log=True)
+#plot(p[0,0], 'Origin', cs[0], log=False)
+#plot(p[1,0], 'MinArrival', cs[0], log=False)
 
 has_volume = volume_points or volume_radii
 

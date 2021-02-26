@@ -81,12 +81,14 @@ struct Civ {
   ld percent_empty = 0.0; // how much of the universe is empty at our origin time
   ld volume_points = 0.0; // Fraction of the universe controlled by this civ at the end of time
   ld volume_radii = 0.0;
+  ld ratio_non_grabby = 0.0; // the ratio R = Q required to expect one prior NGC in a galaxy before a GC origin there
+  ld ratio_non_grabby_now = 0.0; // the ratio R = Q’ required to expect one other NGC in our galaxy now
 };
 ostream& operator<<(ostream& o, const Civ& C) {
   for(ll i=0; i<C.V.size(); i++) {
     o << C.V[i] << ",";
   }
-  o << C.T << "," << C.min_arrival << "," << C.min_see << "," << C.nsee << "," << C.max_angle << "," << C.percent_empty << "," << C.volume_points << "," << C.volume_radii;
+  o << C.T << "," << C.min_arrival << "," << C.min_see << "," << C.nsee << "," << C.max_angle << "," << C.percent_empty << "," << C.volume_points << "," << C.volume_radii << "," << C.ratio_non_grabby << "," << C.ratio_non_grabby_now;
   return o;
 }
 
@@ -343,50 +345,67 @@ vector<Civ> simulate(ll D, ld speed, ld n, ll N, ld c, ld L, ll empty_samples, l
     ALIVE[best.second].volume_points += 1.0/volume_points;
   }
 
-  for(ll i=0; i<ALIVE.size(); i++) {
-    auto& c1 = ALIVE[i];
-    ld sum_rad_cubed = 0.0;
-    for(ll t=0; t<volume_radii; t++) {
-      vector<ld> d = random_direction(D);
-      ld lo = 0.0;
-      ld hi = 10.0*L;
-      while(lo*(1+1e-6) < hi) {
-        ld mid = (lo+hi)/2.0;
-        vector<ld> P = add(c1.V, scale(d, mid));
+  if(volume_radii > 0) {
+    for(ll i=0; i<ALIVE.size(); i++) {
+      auto& c1 = ALIVE[i];
+      ld sum_rad_cubed = 0.0;
+      for(ll t=0; t<volume_radii; t++) {
+        vector<ld> d = random_direction(D);
+        ld lo = 0.0;
+        ld hi = 10.0*L;
+        while(lo*(1+1e-6) < hi) {
+          ld mid = (lo+hi)/2.0;
+          vector<ld> P = add(c1.V, scale(d, mid));
 
-        ld d1 = distance(c1.V, P, L);
-        ld t1 = c1.T + d1/speed;
-        bool ok = true;
-        for(ll j=0; j<D; j++) {
-          if(P[j]<0.0 || P[j]>L) { // outside universe
-            ok = false;
-          }
-        }
-
-        if(ok) {
-          for(ll j=0; j<ALIVE.size(); j++) {
-            if(t1 < ALIVE[j].T) { break; }
-            ld dj = distance(ALIVE[j].V, P, L);
-            ld tj = ALIVE[j].T + dj/speed;
-            if(tj < t1) {
+          ld d1 = distance(c1.V, P, L);
+          ld t1 = c1.T + d1/speed;
+          bool ok = true;
+          for(ll j=0; j<D; j++) {
+            if(P[j]<0.0 || P[j]>L) { // outside universe
               ok = false;
-              break;
             }
           }
-        }
-        if(ok) {
-          lo = mid;
-        } else {
-          hi = mid;
-        }
-      }
 
-      assert(D==3);
-      ld final_rad = (lo+hi)/2.0;
-      sum_rad_cubed += pow(final_rad, 3.0);
+          if(ok) {
+            for(ll j=0; j<ALIVE.size(); j++) {
+              if(t1 < ALIVE[j].T) { break; }
+              ld dj = distance(ALIVE[j].V, P, L);
+              ld tj = ALIVE[j].T + dj/speed;
+              if(tj < t1) {
+                ok = false;
+                break;
+              }
+            }
+          }
+          if(ok) {
+            lo = mid;
+          } else {
+            hi = mid;
+          }
+        }
+
+        assert(D==3);
+        ld final_rad = (lo+hi)/2.0;
+        sum_rad_cubed += pow(final_rad, 3.0);
+      }
+      if(volume_radii > 0) {
+        c1.volume_radii = 4.0/3.0*M_PI*sum_rad_cubed / static_cast<ld>(volume_radii);
+      } else {
+        c1.volume_radii = 0.0;
+      }
+      cerr << "volume i=" << i << " ALIVE.size=" << ALIVE.size() << " volume_points=" << c1.volume_points << " volume_radii=" << c1.volume_radii << endl;
     }
-    c1.volume_radii = 4.0/3.0*M_PI*sum_rad_cubed / static_cast<ld>(volume_radii);
-    cerr << "volume i=" << i << " ALIVE.size=" << ALIVE.size() << " volume_points=" << c1.volume_points << " volume_radii=" << c1.volume_radii << endl;
+  }
+  for(ll i=0; i<ALIVE.size(); i++) {
+    auto& c1 = ALIVE[i];
+    ld g = 2e6; // galaxies per GLyr
+    ld t0 = 13.787; // Earth origin date
+    ld G = g*pow(t0*speed/(c*c1.T), 3); // galaxies in universe
+    ld M = 1e3; // Milky Way is 1000x bigger than avg. galaxy
+    ld Q = G / (M*N*pow(c1.T, n));
+    c1.ratio_non_grabby = Q;
+    ld eps = 2.5e-5;
+    c1.ratio_non_grabby_now = Q / (n*eps);
   }
   return ALIVE;
 }
@@ -417,7 +436,7 @@ int main(int, char** argv) {
   for(ll i=0; i<D; i++) {
     civ_out << static_cast<char>('X'+i) << ",";
   }
-  civ_out << "OriginTime,MinArrival,MinSee,NumberSeen,MaxAngle,PctEmpty,VolumePoints,VolumeRadii" << endl;
+  civ_out << "OriginTime,MinArrival,MinSee,NumberSeen,MaxAngle,PctEmpty,VolumePoints,VolumeRadii,RatioNonGrabby,RatioNonGrabbyNow" << endl;
   for(auto& civ : CIVS) {
     civ_out << civ << endl;
   }
