@@ -150,10 +150,8 @@ if args.figure_12:
 # Make graphs
 fig, p = plt.subplots(4,len(cs)+1,constrained_layout=True,figsize=(18,12))
 
-plot(p[0,0], 'RatioNonGrabby', cs[0], log=True)
-plot(p[1,0], 'RatioNonGrabbyNow', cs[0], log=True)
-#plot(p[0,0], 'Origin', cs[0], log=False)
-#plot(p[1,0], 'MinArrival', cs[0], log=False)
+plot(p[0,0], 'Origin', cs[0], log=False)
+plot(p[1,0], 'MinArrival', cs[0], log=False)
 
 has_volume = volume_points or volume_radii
 
