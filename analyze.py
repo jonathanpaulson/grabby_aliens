@@ -100,18 +100,18 @@ def getData(CIVS, YEARS, label):
         GALAXIES_IN_UNIVERSE = 2e6*pow(13.8/T50, 3)*pow(c/s, 3)
         x = civs_x
         y = sorted([float(row['VolumeRadii'])*GALAXIES_IN_UNIVERSE for row in CIVS])
-    elif label == 'B1':
+    elif label == 'R1':
         x = civs_x
-        y = sorted([float(row['B1']) for row in CIVS])
-    elif label == 'B2':
+        y = sorted([float(row['R1']) for row in CIVS])
+    elif label == 'R2':
         x = civs_x
-        y = sorted([float(row['B2']) for row in CIVS])
-    elif label == 'B3':
+        y = sorted([float(row['R2']) for row in CIVS])
+    elif label == 'R3':
         x = civs_x
-        y = sorted([float(row['B3']) for row in CIVS])
-    elif label == 'B4':
+        y = sorted([float(row['R3']) for row in CIVS])
+    elif label == 'R4':
         x = civs_x
-        y = sorted([float(row['B4']) for row in CIVS])
+        y = sorted([float(row['R4']) for row in CIVS])
     else:
         assert False, f'Unknown label={label}'
     return (x,y)
@@ -193,10 +193,10 @@ for i,c in enumerate(cs):
     plot(p[2,i+1], 'MinTillSee (Gyr)', c, log=True)
     plot(p[3,i+1], 'MaxAngle', c, log=False)
 
-plot(p[0,len(cs)+1], 'B1', cs[0], log=True)
-plot(p[1,len(cs)+1], 'B2', cs[0], log=True)
-plot(p[2,len(cs)+1], 'B3', cs[0], log=True)
-plot(p[3,len(cs)+1], 'B4', cs[0], log=True)
+plot(p[0,len(cs)+1], 'R1', cs[0], log=True)
+plot(p[1,len(cs)+1], 'R2', cs[0], log=True)
+plot(p[2,len(cs)+1], 'R3', cs[0], log=True)
+plot(p[3,len(cs)+1], 'R4', cs[0], log=True)
 
 handles, labels = p[3,len(cs)].get_legend_handles_labels()
 fig.legend(handles, labels, loc='lower center')

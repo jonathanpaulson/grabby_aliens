@@ -81,16 +81,16 @@ struct Civ {
   ld percent_empty = 0.0; // how much of the universe is empty at our origin time
   ld volume_points = 0.0; // Fraction of the universe controlled by this civ at the end of time
   ld volume_radii = 0.0;
-  ld b1 = 0.0;
-  ld b2 = 0.0;
-  ld b3 = 0.0;
-  ld b4 = 0.0;
+  ld r1 = 0.0;
+  ld r2 = 0.0;
+  ld r3 = 0.0;
+  ld r4 = 0.0;
 };
 ostream& operator<<(ostream& o, const Civ& C) {
   for(ll i=0; i<C.V.size(); i++) {
     o << C.V[i] << ",";
   }
-  o << C.T << "," << C.min_arrival << "," << C.min_see << "," << C.nsee << "," << C.max_angle << "," << C.percent_empty << "," << C.volume_points << "," << C.volume_radii << "," << C.b1 << "," << C.b2 << "," << C.b3 << "," << C.b4;
+  o << C.T << "," << C.min_arrival << "," << C.min_see << "," << C.nsee << "," << C.max_angle << "," << C.percent_empty << "," << C.volume_points << "," << C.volume_radii << "," << C.r1 << "," << C.r2 << "," << C.r3 << "," << C.r4;
   return o;
 }
 
@@ -411,10 +411,10 @@ vector<Civ> simulate(ll D, ld speed, ld n, ll N, ld c, ld L, ll empty_samples, l
     ld b3 = M * pow(c1.T,n) / G;
     ld b4 = M * (L/(3*t0)) * (n-1) * pow(c1.T, n-1) / G;
 
-    c1.b1 = b1;
-    c1.b2 = b2;
-    c1.b3 = b3;
-    c1.b4 = b4;
+    c1.r1 = 1.0 / (N*b1);
+    c1.r2 = 1.0 / (N*b2);
+    c1.r3 = 1.0 / (N*b3);
+    c1.r4 = 1.0 / (N*b4);
   }
   return ALIVE;
 }
@@ -445,7 +445,7 @@ int main(int, char** argv) {
   for(ll i=0; i<D; i++) {
     civ_out << static_cast<char>('X'+i) << ",";
   }
-  civ_out << "OriginTime,MinArrival,MinSee,NumberSeen,MaxAngle,PctEmpty,VolumePoints,VolumeRadii,B1,B2,B3,B4" << endl;
+  civ_out << "OriginTime,MinArrival,MinSee,NumberSeen,MaxAngle,PctEmpty,VolumePoints,VolumeRadii,R1,R2,R3,R4" << endl;
   for(auto& civ : CIVS) {
     civ_out << civ << endl;
   }
