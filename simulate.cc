@@ -81,14 +81,16 @@ struct Civ {
   ld percent_empty = 0.0; // how much of the universe is empty at our origin time
   ld volume_points = 0.0; // Fraction of the universe controlled by this civ at the end of time
   ld volume_radii = 0.0;
-  ld ratio_non_grabby = 0.0; // the ratio R = Q required to expect one prior NGC in a galaxy before a GC origin there
-  ld ratio_non_grabby_now = 0.0; // the ratio R = Q’ required to expect one other NGC in our galaxy now
+  ld b1 = 0.0;
+  ld b2 = 0.0;
+  ld b3 = 0.0;
+  ld b4 = 0.0;
 };
 ostream& operator<<(ostream& o, const Civ& C) {
   for(ll i=0; i<C.V.size(); i++) {
     o << C.V[i] << ",";
   }
-  o << C.T << "," << C.min_arrival << "," << C.min_see << "," << C.nsee << "," << C.max_angle << "," << C.percent_empty << "," << C.volume_points << "," << C.volume_radii << "," << C.ratio_non_grabby << "," << C.ratio_non_grabby_now;
+  o << C.T << "," << C.min_arrival << "," << C.min_see << "," << C.nsee << "," << C.max_angle << "," << C.percent_empty << "," << C.volume_points << "," << C.volume_radii << "," << C.b1 << "," << C.b2 << "," << C.b3 << "," << C.b4;
   return o;
 }
 
@@ -398,14 +400,21 @@ vector<Civ> simulate(ll D, ld speed, ld n, ll N, ld c, ld L, ll empty_samples, l
   }
   for(ll i=0; i<ALIVE.size(); i++) {
     auto& c1 = ALIVE[i];
+
     ld g = 2e6; // galaxies per GLyr
     ld t0 = 13.787; // Earth origin date
     ld G = g*pow(t0*speed/(c*c1.T), 3); // galaxies in universe
     ld M = 1e3; // Milky Way is 1000x bigger than avg. galaxy
-    ld Q = G / (M*N*pow(c1.T, n));
-    c1.ratio_non_grabby = Q;
-    ld eps = 2.5e-5;
-    c1.ratio_non_grabby_now = Q / (n*eps);
+
+    ld b1 = 4.0*M_PI/3.0 * (n-1) * 6 / (n*(n+1)*(n+2)*(n+3)) * pow(c/speed, 3.0) * pow(c1.T, n+3);
+    ld b2 = 4.0*M_PI * (n-1) * (L/(3*t0)) * 2 / (n*(n-1)*(n-2)) * pow(c/speed, 2.0) * pow(c1.T, n+3);
+    ld b3 = M * pow(c1.T,n) / G;
+    ld b4 = M * (L/(3*t0)) * (n-1) * pow(c1.T, n-1) / G;
+
+    c1.b1 = b1;
+    c1.b2 = b2;
+    c1.b3 = b3;
+    c1.b4 = b4;
   }
   return ALIVE;
 }
@@ -436,7 +445,7 @@ int main(int, char** argv) {
   for(ll i=0; i<D; i++) {
     civ_out << static_cast<char>('X'+i) << ",";
   }
-  civ_out << "OriginTime,MinArrival,MinSee,NumberSeen,MaxAngle,PctEmpty,VolumePoints,VolumeRadii,RatioNonGrabby,RatioNonGrabbyNow" << endl;
+  civ_out << "OriginTime,MinArrival,MinSee,NumberSeen,MaxAngle,PctEmpty,VolumePoints,VolumeRadii,B1,B2,B3,B4" << endl;
   for(auto& civ : CIVS) {
     civ_out << civ << endl;
   }

@@ -100,12 +100,18 @@ def getData(CIVS, YEARS, label):
         GALAXIES_IN_UNIVERSE = 2e6*pow(13.8/T50, 3)*pow(c/s, 3)
         x = civs_x
         y = sorted([float(row['VolumeRadii'])*GALAXIES_IN_UNIVERSE for row in CIVS])
-    elif label == 'RatioNonGrabby':
+    elif label == 'B1':
         x = civs_x
-        y = sorted([float(row['RatioNonGrabby']) for row in CIVS])
-    elif label == 'RatioNonGrabbyNow':
+        y = sorted([float(row['B1']) for row in CIVS])
+    elif label == 'B2':
         x = civs_x
-        y = sorted([float(row['RatioNonGrabbyNow']) for row in CIVS])
+        y = sorted([float(row['B2']) for row in CIVS])
+    elif label == 'B3':
+        x = civs_x
+        y = sorted([float(row['B3']) for row in CIVS])
+    elif label == 'B4':
+        x = civs_x
+        y = sorted([float(row['B4']) for row in CIVS])
     else:
         assert False, f'Unknown label={label}'
     return (x,y)
@@ -148,7 +154,7 @@ if args.figure_12:
         print(n,G)
 
 # Make graphs
-fig, p = plt.subplots(4,len(cs)+1,constrained_layout=True,figsize=(18,12))
+fig, p = plt.subplots(4,len(cs)+2,constrained_layout=True,figsize=(18,12))
 
 plot(p[0,0], 'Origin', cs[0], log=False)
 plot(p[1,0], 'MinArrival', cs[0], log=False)
@@ -186,6 +192,12 @@ for i,c in enumerate(cs):
     #plot(p[2,i+1], 'MinSee', c, log=False)
     plot(p[2,i+1], 'MinTillSee (Gyr)', c, log=True)
     plot(p[3,i+1], 'MaxAngle', c, log=False)
+
+plot(p[0,len(cs)+1], 'B1', cs[0], log=True)
+plot(p[1,len(cs)+1], 'B2', cs[0], log=True)
+plot(p[2,len(cs)+1], 'B3', cs[0], log=True)
+plot(p[3,len(cs)+1], 'B4', cs[0], log=True)
+
 handles, labels = p[3,len(cs)].get_legend_handles_labels()
 fig.legend(handles, labels, loc='lower center')
 
