@@ -405,11 +405,12 @@ vector<Civ> simulate(ll D, ld speed, ld n, ll N, ld c, ld L, ll empty_samples, l
     ld t0 = 13.787; // Earth origin date
     ld G = g*pow(t0*speed/(c*c1.T), 3); // galaxies in universe
     ld M = 1e3; // Milky Way is 1000x bigger than avg. galaxy
+    ld L0 = 1e-3; // 1 Myr (in Gyr)
 
     ld b1 = 4.0*M_PI/3.0 * (n-1) * 6 / (n*(n+1)*(n+2)*(n+3)) * pow(c/speed, 3.0) * pow(c1.T, n+3);
-    ld b2 = 4.0*M_PI * (n-1) * (L/(3*t0)) * 2 / (n*(n-1)*(n-2)) * pow(c/speed, 2.0) * pow(c1.T, n+3);
+    ld b2 = 4.0*M_PI * (n-1) * (L0/(3*t0)) * 2 / (n*(n-1)*(n-2)) * pow(c/speed, 2.0) * pow(c1.T, n+3);
     ld b3 = M * pow(c1.T,n) / G;
-    ld b4 = M * (L/(3*t0)) * (n-1) * pow(c1.T, n-1) / G;
+    ld b4 = M * (L0/(3*t0)) * (n-1) * pow(c1.T, n-1) / G;
 
     c1.r1 = 1.0 / (N*b1);
     c1.r2 = 1.0 / (N*b2);
