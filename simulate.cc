@@ -407,16 +407,17 @@ vector<Civ> simulate(ll D, ld speed, ld n, ll N, ld c, ld L, ll empty_samples, l
     ld M = 1e3; // Milky Way is 1000x bigger than avg. galaxy
     ld L0 = 1e-3; // 1 Myr (in Gyr)
 
-    ld b1 = 4.0*M_PI/3.0 * (n-1) * 6 / (n*(n+1)*(n+2)*(n+3)) * pow(c/speed, 3.0) * pow(c1.T, n+3);
-    ld b2 = 4.0*M_PI * (n-1) * (L0/(3*t0)) * 2 / (n*(n-1)*(n-2)) * pow(c/speed, 2.0) * pow(c1.T, n+3);
-    ld b3 = M * pow(c1.T,n) / G;
-    ld b4 = M * (L0/(3*t0)) * (n-1) * pow(c1.T, n-1) / G;
+    ld b1 = 4.0*M_PI/3.0 * n * 6 / ((n+1)*(n+2)*(n+3)*(n+4)) * pow(c/speed, 3.0) * pow(c1.T, n+4);
+    ld b2 = 4.0*M_PI * n * (L0/(3*t0)) * 2 / ((n+1)*n*(n-1)) * pow(c/speed, 2.0) * pow(c1.T, n+4);
+    ld b3 = M * pow(c1.T, n+1) / G;
+    ld b4 = M * (L0/(3*t0)) * n * pow(c1.T, n) / G;
 
     c1.r1 = 1.0 / (N*b1);
     c1.r2 = 1.0 / (N*b2);
     c1.r3 = 1.0 / (N*b3);
     c1.r4 = 1.0 / (N*b4);
   }
+
   return ALIVE;
 }
 
@@ -436,7 +437,7 @@ int main(int, char** argv) {
 
   RNG.seed(seed);
 
-  cerr << "D=" << D << " n=" << n << " N=" << N << " speed=" << speed << " c=" << c << " L=" << L << endl;
+  cerr << "D=" << D << " n=" << n << " N=" << N << " speed=" << speed << " c=" << c << " L=" << L << " seed=" << seed << endl;
 
   // Compute the surviving civs
   vector<Civ> CIVS = simulate(D, speed, n, N, c, L, empty_samples, volume_points, volume_radii);
