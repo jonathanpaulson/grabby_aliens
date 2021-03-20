@@ -139,22 +139,22 @@ vector<ld> distances(const vector<ld>& A, const vector<ld>& B, ld L, ld MAX) {
         d2 += sq(D2[i]);
       }
     }
-    Q.push(make_pair(d2, P));
+    Q.push(make_pair(-d2, P));
   }
 
   vector<ld> ANS;
   while(!Q.empty()) {
     pair<ld, vector<ld>> x = Q.top(); Q.pop();
-    ld dist = sqrt(x.first);
+    ld dist = sqrt(-x.first);
     if(dist < MAX || ANS.empty()) {
       ANS.push_back(dist);
     }
-    if(dist > MAX) { continue; }
+    if(dist > MAX) { return ANS; }
     vector<ld> P = x.second;
     for(ll i=0; i<A.size(); i++) {
       vector<ld> P2(P.begin(), P.end());
       P2[i] += 1;
-      Q.push(make_pair(x.first-sq(P[i])+sq(P[i]+1), P2));
+      Q.push(make_pair(x.first-sq(P[i]+1)+sq(P[i]), P2));
     }
   }
   return ANS;
@@ -354,16 +354,18 @@ vector<Civ> simulate(ll D, ld speed, ld n, ll N, ld c, ld L, ll empty_samples, l
     for(ll j=0; j<ALIVE.size(); j++) {
       auto c2 = ALIVE[j];
       if(i!=j) {
-        //ld dij = distance(c1.V, c2.V, L);
-        
-        // c2.T + dij/c < c1.T
-        // dij/c < c1.T-c2.T
-        // dij < c*(c1.T-c2.T)
-        ld max_distance = (c1.T-c2.T)*c;
-        auto dijs = distances(c1.V, c2.V, L, max_distance);
-        if(dijs.size() > 1) {
-          cerr << i << " " << dijs.size() << endl;
+        vector<ld> dijs;
+        bool do_copies = true;
+        if(do_copies) {
+          // c2.T + dij/c < c1.T
+          // dij/c < c1.T-c2.T
+          // dij < c*(c1.T-c2.T)
+          ld max_distance = (c1.T-c2.T)*c;
+          dijs = distances(c1.V, c2.V, L, max_distance);
+        } else {
+          dijs = {distance(c1.V, c2.V, L)};
         }
+
         for(auto& dij : dijs) {
           ld arrival = c2.T + dij/speed;
           ld oij = c2.T + dij/c;
