@@ -61,7 +61,8 @@ c_str = ','.join([str(c) for c,n in DATA.keys()])
 def getLabels():
     return ['Origin', 'MinArrival', 'MinSee',
             'Origin (Gyr)', 'MinTillMeet (Gyr)', 'MinTillSee (Gyr)',
-            'MaxAngle', '% Empty', 'Volume (Points)', 'Volume (Radii)']
+            'MaxAngle', 'Angular Border',
+            '% Empty', 'Volume (Points)', 'Volume (Radii)']
 
 def getData(CIVS, YEARS, label):
     civs_x = [float(i)/len(CIVS) for i in range(len(CIVS))]
@@ -89,6 +90,9 @@ def getData(CIVS, YEARS, label):
     elif label == 'MaxAngle':
         x = civs_x
         y = sorted([float(row['MaxAngle']) for row in CIVS])
+    elif label == 'Angular Border':
+        x = civs_x
+        y = sorted([float(row['AngularBorder']) for row in CIVS])
     elif label == '% Empty':
         x = civs_x
         y = list(reversed(sorted([float(row['PctEmpty']) for row in CIVS])))
@@ -190,7 +194,8 @@ for i,c in enumerate(cs):
     plot(p[1,i+1], 'MinTillMeet (Gyr)', c, log=True)
     # Omitted for space
     #plot(p[2,i+1], 'MinSee', c, log=False)
-    plot(p[2,i+1], 'MinTillSee (Gyr)', c, log=True)
+    #plot(p[2,i+1], 'MinTillSee (Gyr)', c, log=True)
+    plot(p[2, i+1], 'Angular Border', c, log=False)
     plot(p[3,i+1], 'MaxAngle', c, log=False)
 
 plot(p[0,len(cs)+1], 'R1', cs[0], log=True)
