@@ -38,7 +38,11 @@ for c in cs:
         if os.path.exists(f'{fname}_civs.csv') and os.path.exists(f'{fname}_years.csv') and not args.force:
             print(f'Reusing {fname}_civs.csv and {fname}_years.csv')
         else:
-            cmd = f'g++ -std=c++17 -O3 -Wall -Werror -Wextra -Wshadow -Wno-sign-compare simulate.cc && ./a.out {D} {code_n} {N} {s} {c} {L} {fname} {seed} {empty_samples} {m} {volume_points} {volume_radii} 2>{fname}.out'
+            if not os.path.exists(f'./a.out'):
+                cmd = 'g++ -std=c++17 -O3 -Wall -Werror -Wextra -Wshadow -Wno-sign-compare simulate.cc'
+                print(cmd)
+                subprocess.run(cmd, shell=True)
+            cmd = f'./a.out {D} {code_n} {N} {s} {c} {L} {fname} {seed} {empty_samples} {m} {volume_points} {volume_radii} 2>{fname}.out'
             print(cmd)
             subprocess.check_output(cmd, shell=True)
             print(f'Generated {fname}_civs.csv and {fname}_years.csv')
