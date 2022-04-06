@@ -139,7 +139,7 @@ if args.table_1:
 
 def plot(ax, label, target_c, log):
     ax.minorticks_on()
-    ax.grid(b=True, which='major', axis='both')
+    ax.grid(visible=True, which='major', axis='both')
     ax.tick_params(axis='both', which='both', bottom=True, left=True)
     ax.set_xlabel('Percentile')
     for (c,n),(CIVS,YEARS) in DATA.items():
