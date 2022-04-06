@@ -7,6 +7,7 @@ import matplotlib
 import argparse
 import subprocess
 import math
+import platform
 
 parser = argparse.ArgumentParser(description='Run Grabby Aliens model')
 parser.add_argument('--n', type=str, help='The power in the origin-time power-law. You may pass a comma-separated list of values')
@@ -212,7 +213,8 @@ handles, labels = p[3,len(cs)].get_legend_handles_labels()
 fig.legend(handles, labels, loc='lower center')
 
 plt.savefig(f'{fname}.png')
-# Open PNG in windows
-# Switch which line is commented for Linux
-subprocess.check_output(f'cmd.exe /C start {fname}.png', shell=True)
-#subprocess.check_output(f'display {fname}.png', shell=True)
+# Open PNG
+if  platform.system() == 'Windows':
+    subprocess.run(f'cmd.exe /C start {fname}.png', shell=True)
+elif  platform.system() == 'Linux':
+    subprocess.run(f'display {fname}.png', shell=True)
